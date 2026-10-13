@@ -1,0 +1,20 @@
+﻿gradle-wrapper.jar
+/.gradle
+/.kotlin
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+/build
+build/
+app/build/
+*.iml
+.cxx/
+GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.java
+
+# Keystores and private keys
+key.properties
+**/*.keystore
+**/*.jks
+*.hprof

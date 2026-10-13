@@ -1,0 +1,185 @@
+﻿# ==============================================================================
+# MoodEats - Master Monorepo .gitignore
+# Covers: Root, Web Admin (CI4/PHP), ADK Agent (Python), Flutter App (Mobile)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment & Secrets (ALL levels & subdirectories)
+# ------------------------------------------------------------------------------
+**/.env
+**/.env.*
+**/.env.local
+**/.env.*.local
+!**/.env.example
+!**/.env.schema.md
+
+# Private keys, certificates, & credentials
+*.pem
+*.key
+*.pkcs12
+*.pfx
+*.p12
+*.crt
+*.cer
+*.der
+*.kdbx
+*.keystore
+*.jks
+**/key.properties
+**/local.properties
+**/credentials.json
+**/service-account*.json
+**/service_account*.json
+**/client_secret*.json
+id_rsa*
+id_ed25519*
+
+# Database local storage & dumps
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+*.sql.bak
+*.sql.tar
+
+# ------------------------------------------------------------------------------
+# 2. Operating System & IDE Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor & IDE configs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
+*.code-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.bak
+*.tmp
+*.temp
+
+# ------------------------------------------------------------------------------
+# 3. Root Temporary Scripts & Debug Dumps
+# ------------------------------------------------------------------------------
+/error.html
+*.html.dump
+*.stacktrace
+/generate_*.py
+/run_*.py
+/check_*.py
+/edit_*.py
+/extract_*.py
+/fetch_*.py
+/inspect_*.py
+/list_*.py
+/find_*.py
+/test_*.py
+/seed_*.py
+/temp_*.py
+/scratch_*.py
+/debug_*.py
+/stitch_proxy.py
+/all_screens_catalog.json
+
+# ------------------------------------------------------------------------------
+# 4. Web Admin - PHP & CodeIgniter 4 (web_admin/)
+# ------------------------------------------------------------------------------
+web_admin/vendor/
+**/vendor/
+web_admin/writable/debugbar/
+# debugbar ignored
+web_admin/writable/logs/*
+!web_admin/writable/logs/index.html
+web_admin/writable/cache/*
+!web_admin/writable/cache/index.html
+web_admin/writable/session/*
+!web_admin/writable/session/index.html
+web_admin/writable/uploads/*
+!web_admin/writable/uploads/index.html
+web_admin/builds/
+web_admin/phpunit.result.cache
+web_admin/.phpunit.result.cache
+php_errors.log
+**/php_errors.log
+*.log
+
+# ------------------------------------------------------------------------------
+# 5. ADK Agent - Python & FastAPI (adk_agent/)
+# ------------------------------------------------------------------------------
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+adk_agent/dist/
+adk_agent/build/
+adk_agent/*.egg-info/
+
+# ------------------------------------------------------------------------------
+# 6. Mobile - Flutter & Dart (flutter_app/)
+# ------------------------------------------------------------------------------
+flutter_app/.dart_tool/
+flutter_app/.packages
+flutter_app/build/
+flutter_app/**/build/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.metadata
+flutter_app/pubspec.lock
+flutter_app/.pub/
+flutter_app/.pub-cache/
+flutter_app/.fvm/
+flutter_app/coverage/
+
+# Android build artifacts, caches, and keystores
+flutter_app/android/.gradle/
+flutter_app/android/.kotlin/
+flutter_app/android/.cxx/
+flutter_app/android/build/
+flutter_app/android/app/build/
+flutter_app/android/local.properties
+flutter_app/android/key.properties
+flutter_app/android/app/debug/
+flutter_app/android/app/profile/
+flutter_app/android/app/release/
+flutter_app/android/captures/
+flutter_app/android/**/*.keystore
+flutter_app/android/**/*.jks
+flutter_app/android/*.iml
+flutter_app/android/app/*.iml
+flutter_app/**/GeneratedPluginRegistrant.java
+flutter_app/android/*.hprof
+
+# iOS build artifacts
+flutter_app/ios/Pods/
+flutter_app/ios/.symlinks/
+flutter_app/ios/Flutter/Flutter.framework
+flutter_app/ios/Flutter/Flutter.podspec
+flutter_app/ios/Runner.xcworkspace/
+flutter_app/ios/Flutter/Generated.xcconfig
+flutter_app/ios/Flutter/flutter_export_environment.sh
+
+# Desktop Flutter targets
+flutter_app/linux/flutter/
+flutter_app/macos/Flutter/
+flutter_app/windows/flutter/
