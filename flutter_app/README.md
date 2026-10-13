@@ -1,28 +1,32 @@
 ﻿# MoodEats Mobile Application (Flutter)
 
-Aplikasi mobile MoodEats berbasis Flutter (iOS & Android) untuk penemuan kuliner berbasis sentimen emosional pengguna secara real-time.
+Cross-platform mobile client for MoodEats (iOS & Android) delivering real-time sentiment-based culinary discovery and conversational commerce.
 
-## Prasyarat Lingkungan
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (versi >= 3.2.0)
-- Android Studio / Xcode untuk emulator dan toolchain kompilasi.
+## Prerequisites
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (version >= 3.22.0)
+- Android Studio / Xcode for device emulation and compilation toolchains.
 
-## Konfigurasi Environment
-Pastikan file `.env` di folder ini sudah ada (disalin dari `.env.example` atau `.env.local`):
+## Environment Configuration
+Ensure the `.env` file exists in this directory (copied from `.env.example` or `.env.local`):
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your_supabase_anon_key_here
-ADK_AGENT_BASE_URL=http://10.0.2.2:8080   # 10.0.2.2 untuk emulator Android
+ADK_AGENT_BASE_URL=http://10.0.2.2:8080   # 10.0.2.2 for Android Emulator
 GOOGLE_PLACES_API_KEY=your_google_places_api_key_here
 FIREBASE_API_KEY=your_firebase_api_key_here
-FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_PROJECT_ID=your-project-id
 ```
 
-## Menjalankan Aplikasi
+## Running the Application
 1. Download package dependencies:
    ```bash
    flutter pub get
    ```
-2. Jalankan aplikasi pada simulator/perangkat fisik:
+2. Run on connected physical device or emulator:
    ```bash
    flutter run
+   ```
+3. Or compile a standalone debug APK:
+   ```bash
+   flutter build apk --debug
    ```

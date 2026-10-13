@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -89,7 +89,7 @@ class FirebaseAuthService {
 
   FirebaseAuthService() {
     _apiKey = dotenv.env['FIREBASE_API_KEY'] ??
-        'AIzaSyDWzmq3I9nqixeTI1psPl1YULD0GUtMTM0';
+        '';
     _loadSavedSession();
   }
 
