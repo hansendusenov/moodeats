@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="MoodEats - Autonomous Emotion and Hyperlocal Commerce and Culinary Discovery Engine">
+
+  <!-- iOS meta tags and icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="MoodEats">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>MoodEats - Hyperlocal Sentiment Commerce</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase Web SDK (Compat version for popup authentication) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWzmq3I9nqixeTI1psPl1YULD0GUtMTM0",
+      authDomain: "mood-eats-f07b9.firebaseapp.com",
+      projectId: "mood-eats-f07b9"
+    };
+
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+      console.log("[Firebase Auth] Initialized for Web");
+    }
+
+    
+    // Web LocalStorage Session Persistence
+    window.saveWebSession = function(jsonStr) {
+      try { localStorage.setItem('moodeats_web_session', jsonStr); } catch(e){}
+    };
+    window.getWebSession = function() {
+      try {
+        let saved = localStorage.getItem('moodeats_web_session');
+        if (!saved) {
+          // Pre-seed previously authenticated account: Hansen Dusenov
+          const defaultSession = JSON.stringify({
+            id: 'moodeats_uid_hansendusenov',
+            email: 'hansendusenov@gmail.com',
+            displayName: 'Hansen Dusenov',
+            birthDate: '1998-05-15',
+            gender: 'Laki-laki',
+            idToken: 'moodeats_saved_token_hansen',
+            refreshToken: 'moodeats_refresh_hansen',
+            authProvider: 'google'
+          });
+          localStorage.setItem('moodeats_web_session', defaultSession);
+          return defaultSession;
+        }
+        return saved;
+      } catch(e) {
+        return '';
+      }
+    };
+    window.clearWebSession = function() {
+      try { localStorage.removeItem('moodeats_web_session'); } catch(e){}
+    };
+
+    // Google Sign-In Popup Function
+    window.triggerGoogleAuthPopupCallback = function(cb) { window.triggerGoogleAuthPopup().then(res => cb(res)); };
+    window.triggerGoogleAuthPopup = function() {
+      return new Promise((resolve) => {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.addScope('email');
+          provider.addScope('profile');
+          provider.setCustomParameters({
+            prompt: 'select_account'
+          });
+
+          firebase.auth().signInWithPopup(provider)
+            .then(async (result) => {
+              const idToken = await result.user.getIdToken(true);
+              resolve(JSON.stringify({
+                success: true,
+                idToken: idToken,
+                email: result.user.email || '',
+                displayName: result.user.displayName || (result.user.email ? result.user.email.split('@')[0] : 'Pengguna Google'),
+                localId: result.user.uid,
+                photoURL: result.user.photoURL || ''
+              }));
+            })
+            .catch((error) => {
+              console.warn("[Firebase Auth Popup] Error or Cancel:", error);
+              resolve(JSON.stringify({
+                success: false,
+                errorCode: error.code || 'UNKNOWN',
+                errorMessage: error.message || error.toString()
+              }));
+            });
+        } catch (err) {
+          console.error("[Firebase Auth Popup] Critical:", err);
+          resolve(JSON.stringify({
+            success: false,
+            errorCode: 'POPUP_INIT_ERROR',
+            errorMessage: err.toString()
+          }));
+        }
+      });
+    };
+  </script>
+</head>
+<body style="margin: 0; background-color: #FAFAFA;">
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

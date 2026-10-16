@@ -10,47 +10,91 @@
             <span>/</span>
             <span>Pelanggan</span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Manajemen User &amp; Voucher</span>
+            <span class="text-red-600 font-bold">Manajemen User &amp; Siklus Hidup PDP</span>
         </div>
-        <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-2">
-            User Management &amp; Voucher Injection
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-red-50 text-red-700 border border-red-200">
-                Live Profiles
-            </span>
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-3">
+            User Management, Status &amp; Siklus Hidup UU PDP
+            <?php if ($isPrivileged): ?>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-50 text-amber-800 border border-amber-300">
+                    Mode Forensik: Unmasked PII
+                </span>
+            <?php else: ?>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-50 text-blue-800 border border-blue-300">
+                    Mode UU PDP: PII Dimasking Otomatis
+                </span>
+            <?php endif; ?>
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
-            Pantau akun pengguna, status blokir (banned), dan berikan kupon promo khusus (injeksi voucher) secara instan.
+            Kelola profil pengguna, status blokir anti-evasion, masa tenggang penghapusan (30 hari), dan pemutusan relasi sesi (unlinking) kepatuhan UU PDP No. 27/2022.
         </p>
     </div>
 </div>
 
-<!-- Stats Overview Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-    <div class="bg-white p-3.5 rounded-xl border border-red-100 shadow-xs flex items-center justify-between">
+<!-- Stats Overview Cards (6 Lifecycle Counters) -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+    <!-- Total -->
+    <div class="bg-white p-3 rounded-xl border border-red-100 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pengguna</div>
-            <div class="text-2xl font-black text-slate-900 mt-0.5"><?= $totalUsers ?></div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total User</div>
+            <div class="text-xl font-black text-slate-900 mt-0.5"><?= $totalUsers ?></div>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600">
-            <span class="material-symbols-outlined text-[20px]">group</span>
+        <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600">
+            <span class="material-symbols-outlined text-[18px]">group</span>
         </div>
     </div>
-    <div class="bg-white p-3.5 rounded-xl border border-red-100 shadow-xs flex items-center justify-between">
+
+    <!-- Active -->
+    <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Pengguna Aktif</div>
-            <div class="text-2xl font-black text-emerald-600 mt-0.5"><?= $activeCount ?></div>
+            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Aktif</div>
+            <div class="text-xl font-black text-emerald-600 mt-0.5"><?= $activeCount ?></div>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
         </div>
     </div>
-    <div class="bg-white p-3.5 rounded-xl border border-red-100 shadow-xs flex items-center justify-between">
+
+    <!-- Banned -->
+    <div class="bg-white p-3 rounded-xl border border-red-200 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[11px] font-bold text-red-600 uppercase tracking-wider">Akun Diblokir (Banned)</div>
-            <div class="text-2xl font-black text-red-600 mt-0.5"><?= $bannedCount ?></div>
+            <div class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Diblokir</div>
+            <div class="text-xl font-black text-red-600 mt-0.5"><?= $bannedCount ?></div>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600">
-            <span class="material-symbols-outlined text-[20px]">block</span>
+        <div class="w-8 h-8 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600" title="Akun diblokir tidak dapat dianonimkan demi anti-evasion">
+            <span class="material-symbols-outlined text-[18px]">block</span>
+        </div>
+    </div>
+
+    <!-- Dormant (>30d) -->
+    <div class="bg-white p-3 rounded-xl border border-amber-100 shadow-xs flex items-center justify-between">
+        <div>
+            <div class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Dormant (&gt;30h)</div>
+            <div class="text-xl font-black text-amber-600 mt-0.5"><?= $dormantCount ?></div>
+        </div>
+        <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+            <span class="material-symbols-outlined text-[18px]">bedtime</span>
+        </div>
+    </div>
+
+    <!-- Pending Deletion -->
+    <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-xs flex items-center justify-between">
+        <div>
+            <div class="text-[10px] font-bold text-purple-600 uppercase tracking-wider">Grace Period</div>
+            <div class="text-xl font-black text-purple-600 mt-0.5"><?= $pendingDeletionCount ?></div>
+        </div>
+        <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
+            <span class="material-symbols-outlined text-[18px]">hourglass_top</span>
+        </div>
+    </div>
+
+    <!-- Anonymized (Crypto-Shredded) -->
+    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dianonimkan</div>
+            <div class="text-xl font-black text-slate-700 mt-0.5"><?= $anonymizedCount ?></div>
+        </div>
+        <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500" title="Telah di crypto-shred dan unlinked">
+            <span class="material-symbols-outlined text-[18px]">visibility_off</span>
         </div>
     </div>
 </div>
@@ -70,7 +114,7 @@
         </div>
 
         <!-- Filter Status Buttons -->
-        <div class="flex items-center gap-1.5 text-xs">
+        <div class="flex items-center flex-wrap gap-1.5 text-xs">
             <button type="button" onclick="filterStatus('all')" id="filterBtnAll" class="px-2.5 py-1.5 rounded-lg font-semibold text-red-600 bg-red-50 border border-red-200 transition-colors">
                 Semua (<span id="countAll"><?= $totalUsers ?></span>)
             </button>
@@ -79,6 +123,15 @@
             </button>
             <button type="button" onclick="filterStatus('banned')" id="filterBtnBanned" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
                 Diblokir (<span id="countBanned"><?= $bannedCount ?></span>)
+            </button>
+            <button type="button" onclick="filterStatus('dormant')" id="filterBtnDormant" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
+                Dormant (<span id="countDormant"><?= $dormantCount ?></span>)
+            </button>
+            <button type="button" onclick="filterStatus('pending_deletion')" id="filterBtnPending" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
+                Grace Period (<span id="countPending"><?= $pendingDeletionCount ?></span>)
+            </button>
+            <button type="button" onclick="filterStatus('anonymized')" id="filterBtnAnon" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
+                Anonim (<span id="countAnon"><?= $anonymizedCount ?></span>)
             </button>
         </div>
     </div>
@@ -93,8 +146,8 @@
                     <th class="py-3 px-4">Pengguna</th>
                     <th class="py-3 px-3">Gender &amp; Lahir</th>
                     <th class="py-3 px-3">Diet &amp; Preferensi</th>
-                    <th class="py-3 px-3">Perangkat &amp; App</th>
-                    <th class="py-3 px-3 text-center">Status Akun</th>
+                    <th class="py-3 px-3">Perangkat &amp; Telemetri</th>
+                    <th class="py-3 px-3 text-center">Status Akun (PDP)</th>
                     <th class="py-3 px-3 text-center">Voucher Aktif</th>
                     <th class="py-3 px-3">Terdaftar</th>
                     <th class="py-3 px-4 text-right">Aksi</th>
@@ -110,34 +163,44 @@
                     </tr>
                 <?php else: ?>
                     <?php foreach ($users as $u): ?>
+                        <?php
+                            $effectiveStatus = $u['effective_status'] ?? 'active';
+                            $isBanned = ($effectiveStatus === 'banned');
+                            $isAnonymized = ($effectiveStatus === 'anonymized');
+                        ?>
                         <tr class="user-row hover:bg-red-50/30 transition-colors"
                             data-name="<?= strtolower(esc($u['display_name'] ?? '')) ?>"
-                            data-email="<?= strtolower(esc($u['email'] ?? '')) ?>"
-                            data-phone="<?= strtolower(esc($u['phone'] ?? '')) ?>"
+                            data-email="<?= strtolower(esc($u['email_display'] ?? '')) ?>"
+                            data-phone="<?= strtolower(esc($u['phone_display'] ?? '')) ?>"
                             data-diet="<?= strtolower(esc($u['dietary_type'] ?? '')) ?>"
                             data-device="<?= strtolower(esc($u['device_model'] ?? '')) ?>"
                             data-os="<?= strtolower(esc($u['device_os'] ?? '')) ?>"
                             data-app="<?= strtolower(esc($u['app_version'] ?? '')) ?>"
-                            data-status="<?= $u['is_banned'] ? 'banned' : 'active' ?>">
+                            data-status="<?= esc($effectiveStatus) ?>">
                             
-                            <!-- Pengguna -->
+                            <!-- Pengguna & PII Info -->
                             <td class="py-3 px-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-full <?= $u['is_banned'] ? 'bg-red-100 text-red-600' : 'bg-red-50 text-red-600' ?> font-black flex items-center justify-center text-xs shrink-0 border <?= $u['is_banned'] ? 'border-red-200' : 'border-red-100' ?>">
+                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 <?= $isBanned ? 'bg-red-100 text-red-700' : ($isAnonymized ? 'bg-slate-200 text-slate-600' : 'bg-red-50 text-red-600') ?>">
                                         <?= strtoupper(substr($u['display_name'] ?? 'U', 0, 1)) ?>
                                     </div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-slate-900 truncate flex items-center gap-1.5">
                                             <?= esc($u['display_name'] ?? 'Pengguna') ?>
-                                            <?php if ($u['is_banned']): ?>
+                                            <?php if ($isBanned): ?>
                                                 <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-red-100 text-red-700 border border-red-200">
                                                     BANNED
                                                 </span>
                                             <?php endif; ?>
                                         </div>
-                                        <div class="text-[11px] text-slate-500 font-mono truncate"><?= esc($u['email'] ?? '-') ?></div>
-                                        <?php if (!empty($u['phone'])): ?>
-                                            <div class="text-[10px] text-slate-400 font-mono"><?= esc($u['phone']) ?></div>
+                                        <div class="text-[11px] text-slate-500 font-mono truncate">
+                                            <?= esc($u['email_display'] ?? '-') ?>
+                                            <?php if (!$isPrivileged && !empty($u['email']) && $u['email_display'] !== '-'): ?>
+                                                <span class="text-[9px] text-blue-600 font-sans" title="Masked PII">(PDP)</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if (!empty($u['phone_display']) && $u['phone_display'] !== '-'): ?>
+                                            <div class="text-[10px] text-slate-400 font-mono"><?= esc($u['phone_display']) ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -156,7 +219,7 @@
                             <!-- Diet & Preferensi -->
                             <td class="py-3 px-3">
                                 <div class="flex flex-wrap items-center gap-1">
-                                    <?php if ($u['is_halal_only']): ?>
+                                    <?php if (!empty($u['is_halal_only'])): ?>
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                             Halal Only
                                         </span>
@@ -172,15 +235,15 @@
                                 </div>
                             </td>
 
-                            <!-- Perangkat & App -->
+                            <!-- Perangkat & Telemetri -->
                             <td class="py-3 px-3">
                                 <?php if (!empty($u['device_model']) || !empty($u['device_os'])): ?>
                                     <div class="flex flex-col gap-1">
                                         <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-[15px] <?= str_contains(strtolower($u['device_os'] ?? ''), 'android') ? 'text-emerald-600' : (str_contains(strtolower($u['device_os'] ?? ''), 'ios') ? 'text-slate-700' : 'text-slate-500') ?>">
+                                            <span class="material-symbols-outlined text-[15px] <?= str_contains(strtolower($u['device_os'] ?? ''), 'android') ? 'text-emerald-600' : 'text-slate-700' ?>">
                                                 <?= str_contains(strtolower($u['device_os'] ?? ''), 'ios') ? 'phone_iphone' : 'smartphone' ?>
                                             </span>
-                                            <span class="truncate max-w-[150px]" title="<?= esc($u['device_model'] ?? 'Mobile Device') ?>">
+                                            <span class="truncate max-w-[130px]" title="<?= esc($u['device_model'] ?? 'Mobile Device') ?>">
                                                 <?= esc($u['device_model'] ?? 'Mobile Device') ?>
                                             </span>
                                         </div>
@@ -196,9 +259,9 @@
                                                 </span>
                                             <?php endif; ?>
                                         </div>
-                                        <?php if (!empty($u['last_active_at'])): ?>
-                                            <div class="text-[10px] text-slate-400">
-                                                Aktif: <?= date('d/m/y H:i', strtotime($u['last_active_at'])) ?>
+                                        <?php if (!empty($u['email_hash'])): ?>
+                                            <div class="text-[9px] text-red-500 font-mono truncate max-w-[130px]" title="SHA-256 Anti-Evasion Hash: <?= esc($u['email_hash']) ?>">
+                                                #hash: <?= substr($u['email_hash'], 0, 8) ?>...
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -207,20 +270,35 @@
                                 <?php endif; ?>
                             </td>
 
-                            <!-- Status Akun -->
+                            <!-- Status Akun (PDP Lifecycle) -->
                             <td class="py-3 px-3 text-center">
-                                <?php if ($u['is_banned']): ?>
+                                <?php if ($effectiveStatus === 'banned'): ?>
                                     <div class="inline-flex flex-col items-center">
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
                                             <span class="material-symbols-outlined text-[12px]">block</span>
-                                            Diblokir
+                                            BANNED
                                         </span>
-                                        <?php if (!empty($u['banned_reason'])): ?>
-                                            <span class="text-[9px] text-red-500 max-w-[130px] truncate mt-0.5" title="<?= esc($u['banned_reason']) ?>">
-                                                <?= esc($u['banned_reason']) ?>
+                                        <?php if (!empty($u['banned_reason']) || !empty($u['ban_reason'])): ?>
+                                            <span class="text-[9px] text-red-500 max-w-[130px] truncate mt-0.5" title="<?= esc($u['banned_reason'] ?? $u['ban_reason']) ?>">
+                                                <?= esc($u['banned_reason'] ?? $u['ban_reason']) ?>
                                             </span>
                                         <?php endif; ?>
                                     </div>
+                                <?php elseif ($effectiveStatus === 'dormant'): ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200" title="Tidak aktif lebih dari 30 hari">
+                                        <span class="material-symbols-outlined text-[12px]">bedtime</span>
+                                        Dormant
+                                    </span>
+                                <?php elseif ($effectiveStatus === 'pending_deletion'): ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200" title="Masa tenggang penghapusan aktif (30 hari)">
+                                        <span class="material-symbols-outlined text-[12px]">hourglass_top</span>
+                                        Grace Period
+                                    </span>
+                                <?php elseif ($effectiveStatus === 'anonymized'): ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300" title="Crypto-shredded & Sessions Unlinked">
+                                        <span class="material-symbols-outlined text-[12px]">visibility_off</span>
+                                        Dianonimkan
+                                    </span>
                                 <?php else: ?>
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         <span class="material-symbols-outlined text-[12px]">check_circle</span>
@@ -249,15 +327,15 @@
                                 <div class="flex items-center justify-end gap-1.5">
                                     <!-- Injeksi Voucher Button -->
                                     <button type="button" 
-                                            onclick="openInjectModal('<?= esc($u['id']) ?>', '<?= esc($u['display_name']) ?>', '<?= esc($u['email']) ?>', <?= $u['is_banned'] ? 'true' : 'false' ?>)"
-                                            class="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
-                                            title="Injeksi Voucher ke Pengguna">
+                                            onclick="openInjectModal('<?= esc($u['id']) ?>', '<?= esc($u['display_name']) ?>', '<?= esc($u['email_display']) ?>', <?= ($isBanned || $isAnonymized) ? 'true' : 'false' ?>)"
+                                            class="px-2.5 py-1.5 rounded-lg <?= ($isBanned || $isAnonymized) ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white' ?> text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
+                                            title="<?= ($isBanned || $isAnonymized) ? 'Tidak dapat injeksi voucher' : 'Injeksi Voucher ke Pengguna' ?>">
                                         <span class="material-symbols-outlined text-[14px]">add_card</span>
-                                        <span>Injeksi Voucher</span>
+                                        <span>Injeksi</span>
                                     </button>
 
                                     <!-- Ban / Unban Button -->
-                                    <?php if ($u['is_banned']): ?>
+                                    <?php if ($isBanned): ?>
                                         <button type="button" 
                                                 onclick="openBanModal('<?= esc($u['id']) ?>', '<?= esc($u['display_name']) ?>', true)"
                                                 class="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors shadow-2xs"
@@ -273,13 +351,21 @@
                                         </button>
                                     <?php endif; ?>
 
-                                    <!-- Delete Button -->
-                                    <button type="button"
-                                            onclick="openDeleteModal('<?= esc($u['id']) ?>', '<?= esc($u['display_name']) ?>')"
-                                            class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-600 transition-colors shadow-2xs"
-                                            title="Hapus Profil">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span>
-                                    </button>
+                                    <!-- Crypto-Shred Button (UU PDP) -->
+                                    <?php if (!$isBanned && !$isAnonymized): ?>
+                                        <button type="button"
+                                                onclick="openDeleteModal('<?= esc($u['id']) ?>', '<?= esc($u['display_name']) ?>')"
+                                                class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-600 transition-colors shadow-2xs"
+                                                title="Crypto-Shred &amp; Unlink Sessions (UU PDP)">
+                                            <span class="material-symbols-outlined text-[16px]">delete</span>
+                                        </button>
+                                    <?php elseif ($isBanned): ?>
+                                        <button type="button" disabled
+                                                class="p-1.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-300 cursor-not-allowed"
+                                                title="Akun BANNED dilindungi dari penghapusan demi pencegahan ban evasion (UU PDP)">
+                                            <span class="material-symbols-outlined text-[16px]">shield</span>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -329,70 +415,56 @@
 
         <form action="/users/inject-voucher" method="post" class="space-y-4">
             <?= csrf_field() ?>
-            <input type="hidden" name="user_id" id="injectUserId">
+            <input type="hidden" name="user_id" id="injectUserId" value="">
 
-            <!-- Target User Card -->
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div class="p-3 bg-red-50/60 rounded-xl border border-red-100 flex items-center justify-between">
                 <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Pengguna:</span>
-                    <span id="injectUserName" class="text-sm font-extrabold text-slate-900 block mt-0.5">Nama Pengguna</span>
-                    <span id="injectUserEmail" class="text-xs text-slate-500 font-mono">email@example.com</span>
+                    <div class="text-[10px] uppercase font-bold text-red-600">Penerima Voucher</div>
+                    <div class="font-bold text-slate-900 text-xs mt-0.5" id="injectUserName">Pengguna</div>
+                    <div class="text-[11px] text-slate-500 font-mono" id="injectUserEmail">email@example.com</div>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Akun Aktif
-                </span>
+                <span class="material-symbols-outlined text-[26px] text-red-400">person</span>
             </div>
 
-            <!-- Pilih Mitra Sponsor (Opsional) -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Dari Restoran Mitra (Opsional)</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Mitra Merchant (Opsional)</label>
                 <select name="merchant_id" id="injectMerchantSelect" onchange="onMerchantSelectChanged()"
-                        class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
-                    <option value="">-- Kupon Bebas / Khusus (Custom Voucher) --</option>
+                        class="w-full text-xs rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                    <option value="">-- Voucher Promo Internal MoodEats --</option>
                     <?php foreach ($merchants as $m): ?>
                         <option value="<?= esc($m['id']) ?>" 
-                                data-code="<?= esc($m['voucher_code']) ?>" 
+                                data-code="<?= esc($m['voucher_code']) ?>"
                                 data-desc="<?= esc($m['discount_description']) ?>">
                             <?= esc($m['merchant_name']) ?> (<?= esc($m['voucher_code']) ?> - <?= esc($m['discount_description']) ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <p class="text-[10px] text-slate-400 mt-1">Memilih resto mitra akan otomatis mengisi kode dan deskripsi diskon.</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <!-- Kode Voucher -->
+            <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Kode Voucher <span class="text-red-500">*</span></label>
-                    <input type="text" name="voucher_code" id="injectVoucherCode" required placeholder="MISAL: VIPMOOD50"
-                           class="w-full px-3 py-2 text-xs font-mono uppercase font-bold rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Kode Voucher</label>
+                    <input type="text" name="voucher_code" id="injectVoucherCode" placeholder="MISAL: LAPAR20" required
+                           class="w-full text-xs font-mono font-bold uppercase rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
                 </div>
-
-                <!-- Masa Berlaku -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Masa Berlaku <span class="text-red-500">*</span></label>
-                    <select name="duration_hours" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
-                        <option value="1">1 Jam (Flash Deal)</option>
-                        <option value="6">6 Jam (Same Day)</option>
-                        <option value="24" selected>24 Jam (1 Hari)</option>
-                        <option value="72">3 Hari</option>
-                        <option value="168">7 Hari (1 Minggu)</option>
-                    </select>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Masa Berlaku (Jam)</label>
+                    <input type="number" name="duration_hours" id="injectDuration" value="24" min="1" max="720" required
+                           class="w-full text-xs font-bold rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
                 </div>
             </div>
 
-            <!-- Deskripsi Diskon -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Diskon / Keuntungan <span class="text-red-500">*</span></label>
-                <input type="text" name="discount_description" id="injectDiscountDesc" required placeholder="Contoh: Diskon 50% Khusus Mood Lover"
-                       class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Diskon</label>
+                <input type="text" name="discount_description" id="injectDiscountDesc" placeholder="Diskon 20% Min. Transaksi 50k" required
+                       class="w-full text-xs rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button type="button" onclick="closeInjectModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm">
+                <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm">
                     <span class="material-symbols-outlined text-[16px]">send</span>
                     Injeksi Voucher Sekarang
                 </button>
@@ -413,8 +485,8 @@
                     <span class="material-symbols-outlined text-[20px]">confirmation_number</span>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Koleksi Kupon Pengguna</h3>
-                    <p class="text-xs text-slate-500" id="vouchersModalSubtitle">Riwayat voucher aktif dan kedaluwarsa</p>
+                    <h3 class="text-base font-extrabold text-slate-900">Riwayat Voucher Pengguna</h3>
+                    <p class="text-xs text-slate-500" id="userVouchersSubtitle">Memuat data voucher...</p>
                 </div>
             </div>
             <button type="button" onclick="closeVouchersModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
@@ -422,22 +494,19 @@
             </button>
         </div>
 
-        <div id="vouchersLoading" class="py-12 text-center text-slate-400">
-            <div class="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            Memuat daftar voucher pengguna...
+        <div id="userVouchersLoading" class="py-10 text-center text-slate-400">
+            <span class="material-symbols-outlined animate-spin text-[32px] text-red-600">sync</span>
+            <div class="text-xs mt-2">Mengambil riwayat voucher...</div>
         </div>
 
-        <div id="vouchersContent" class="hidden">
-            <div class="max-h-[350px] overflow-y-auto space-y-2.5 pr-1">
-                <div id="vouchersList"></div>
-            </div>
-            <div id="noVouchersMsg" class="hidden py-8 text-center text-slate-400">
-                <span class="material-symbols-outlined text-[32px] text-slate-300 block mb-1.5">local_activity</span>
-                Pengguna ini belum memiliki voucher aktif maupun riwayat klaim.
+        <div id="userVouchersContent" class="hidden max-h-80 overflow-y-auto space-y-2 pr-1">
+            <div id="userVouchersList" class="space-y-2"></div>
+            <div id="userVouchersEmpty" class="hidden py-8 text-center text-slate-400 text-xs">
+                Pengguna ini belum memiliki riwayat voucher atau kupon aktif.
             </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-100 flex items-center justify-end mt-4">
+        <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-end">
             <button type="button" onclick="closeVouchersModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
                 Tutup
             </button>
@@ -446,31 +515,32 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: KONFIRMASI BAN / UNBAN USER -->
+<!-- MODAL: BAN / UNBAN USER -->
 <!-- ========================================================================= -->
 <div id="banModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeBanModal()"></div>
     <div class="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-100 z-10 animate-in fade-in zoom-in-95 duration-150">
-        <div class="flex items-center gap-3 mb-3">
-            <div id="banModalIcon" class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 shrink-0">
-                <span class="material-symbols-outlined text-[22px]">block</span>
-            </div>
-            <div>
-                <h3 class="text-base font-extrabold text-slate-900" id="banModalTitle">Blokir Akun Pengguna</h3>
-                <p class="text-xs text-slate-500" id="banModalSubtitle">Tindakan ini akan mencegah pengguna mengakses layanan</p>
-            </div>
-        </div>
-
         <form id="banForm" action="" method="post" class="space-y-4">
             <?= csrf_field() ?>
-            <p class="text-xs text-slate-600 leading-relaxed" id="banModalMessage">
+            <div class="flex items-center gap-3">
+                <div id="banModalIcon" class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 shrink-0">
+                    <span class="material-symbols-outlined text-[22px]">block</span>
+                </div>
+                <div>
+                    <h3 id="banModalTitle" class="text-base font-extrabold text-slate-900">Blokir Akun Pengguna</h3>
+                    <p id="banModalSubtitle" class="text-xs text-slate-500">Tindakan ini akan mencegah pengguna mengakses layanan</p>
+                </div>
+            </div>
+
+            <p id="banModalMessage" class="text-xs text-slate-600 leading-relaxed">
                 Apakah Anda yakin ingin memblokir akun <strong id="banTargetName">Pengguna</strong>?
             </p>
 
             <div id="banReasonContainer">
-                <label class="block text-xs font-bold text-slate-700 mb-1">Alasan Pemblokiran</label>
-                <input type="text" name="reason" id="banReasonInput" placeholder="Contoh: Spam berulang, pelanggaran ToS, kecurangan promo..." 
-                       class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Alasan Pemblokiran (Audit Trail PDP)</label>
+                <textarea name="reason" id="banReasonInput" rows="2" placeholder="Pelanggaran ketentuan layanan, spam, penyalahgunaan voucher..."
+                          class="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-red-500 focus:ring-1 focus:ring-red-500"></textarea>
+                <p class="text-[10px] text-slate-400 mt-1">Alasan pemblokiran, SHA-256 email hash, dan tanda tangan telemetri perangkat akan disimpan permanen demi perlindungan anti-evasion.</p>
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -486,29 +556,37 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: HAPUS USER -->
+<!-- MODAL: CRYPTO-SHRED / HAPUS PDP USER -->
 <!-- ========================================================================= -->
 <div id="deleteUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeDeleteModal()"></div>
-    <div class="relative bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-red-100 z-10 animate-in fade-in zoom-in-95 duration-150">
+    <div class="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-100 z-10 animate-in fade-in zoom-in-95 duration-150">
         <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 shrink-0">
                 <span class="material-symbols-outlined text-[22px]">delete_forever</span>
             </div>
             <div>
-                <h3 class="text-base font-extrabold text-slate-900">Hapus Profil Pengguna</h3>
-                <p class="text-xs text-slate-500">Tindakan ini permanen dan tidak dapat dibatalkan</p>
+                <h3 class="text-base font-extrabold text-slate-900">Crypto-Shred &amp; Hak Penghapusan</h3>
+                <p class="text-xs text-slate-500">Kepatuhan UU PDP No. 27/2022 Pasal 43</p>
             </div>
         </div>
-        <p class="text-xs text-slate-600 mb-5 leading-relaxed">
-            Hapus seluruh data profil pengguna <strong id="deleteTargetName">Pengguna</strong> beserta riwayat voucher terkait?
+        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+            Apakah Anda yakin ingin menganonimkan akun <strong id="deleteTargetName">Pengguna</strong>?
         </p>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1 mb-4 leading-relaxed">
+            <div class="font-bold flex items-center gap-1 text-amber-900">
+                <span class="material-symbols-outlined text-[16px]">info</span> Mekanisme Perlindungan Metrik:
+            </div>
+            <div>&bull; Seluruh identitas pribadi (nama, email, no. telp, profil) akan di-shred &amp; dianonimkan permanen.</div>
+            <div>&bull; Relasi sesi analitik akan di-unlink (<code class="font-mono bg-amber-100 px-1 rounded">user_id = NULL</code>), memastikan agregat metrik tren makanan mitra tetap akurat dan utuh.</div>
+        </div>
         <div class="flex items-center justify-end gap-2">
             <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
                 Batal
             </button>
             <a id="deleteConfirmBtn" href="#" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm">
-                Hapus Sekarang
+                <span class="material-symbols-outlined text-[15px]">verified</span>
+                Ya, Crypto-Shred Akun
             </a>
         </div>
     </div>
@@ -518,7 +596,7 @@
 <!-- JAVASCRIPT: FILTERING, MODALS & PAGINATION -->
 <!-- ========================================================================= -->
 <script>
-    let currentFilter = 'all';
+    let currentFilter = '<?= esc($status ?? 'all') ?>';
     let searchQuery = '';
     let currentPage = 1;
     const pageSize = 10;
@@ -548,17 +626,23 @@
         const btnAll = document.getElementById('filterBtnAll');
         const btnActive = document.getElementById('filterBtnActive');
         const btnBanned = document.getElementById('filterBtnBanned');
+        const btnDormant = document.getElementById('filterBtnDormant');
+        const btnPending = document.getElementById('filterBtnPending');
+        const btnAnon = document.getElementById('filterBtnAnon');
 
         const activeCls = 'text-red-600 bg-red-50 border-red-200';
         const inactiveCls = 'text-slate-600 hover:bg-slate-50 border-slate-200';
 
-        [btnAll, btnActive, btnBanned].forEach(b => {
-            b.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + inactiveCls;
+        [btnAll, btnActive, btnBanned, btnDormant, btnPending, btnAnon].forEach(b => {
+            if (b) b.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + inactiveCls;
         });
 
-        if (status === 'all') btnAll.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
-        if (status === 'active') btnActive.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
-        if (status === 'banned') btnBanned.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
+        if (status === 'all' && btnAll) btnAll.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
+        if (status === 'active' && btnActive) btnActive.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
+        if (status === 'banned' && btnBanned) btnBanned.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
+        if (status === 'dormant' && btnDormant) btnDormant.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
+        if (status === 'pending_deletion' && btnPending) btnPending.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
+        if (status === 'anonymized' && btnAnon) btnAnon.className = 'px-2.5 py-1.5 rounded-lg font-semibold transition-colors border ' + activeCls;
 
         applyFilters();
     }
@@ -639,9 +723,9 @@
     }
 
     // Modal Injeksi Voucher
-    function openInjectModal(userId, userName, userEmail, isBanned) {
-        if (isBanned) {
-            alert('Tidak dapat menginjeksi voucher ke pengguna yang sedang berstatus BANNED.');
+    function openInjectModal(userId, userName, userEmail, isDisabled) {
+        if (isDisabled) {
+            alert('Tidak dapat menginjeksi voucher ke pengguna yang sedang berstatus BANNED atau telah dianonimkan.');
             return;
         }
         document.getElementById('injectUserId').value = userId;
@@ -722,13 +806,13 @@
     // Modal View User Vouchers
     async function viewUserVouchers(userId, userName) {
         const modal = document.getElementById('userVouchersModal');
-        const loading = document.getElementById('vouchersLoading');
-        const content = document.getElementById('vouchersContent');
-        const list = document.getElementById('vouchersList');
-        const emptyMsg = document.getElementById('noVouchersMsg');
+        const loading = document.getElementById('userVouchersLoading');
+        const content = document.getElementById('userVouchersContent');
+        const list = document.getElementById('userVouchersList');
+        const emptyMsg = document.getElementById('userVouchersEmpty');
+        const subtitle = document.getElementById('userVouchersSubtitle');
 
-        document.getElementById('vouchersModalSubtitle').innerText = 'Koleksi voucher aktif & riwayat milik ' + userName;
-
+        subtitle.innerText = 'Daftar kupon yang dimiliki oleh ' + userName;
         modal.classList.remove('hidden');
         loading.classList.remove('hidden');
         content.classList.add('hidden');
@@ -736,36 +820,39 @@
         emptyMsg.classList.add('hidden');
 
         try {
-            const res = await fetch('/users/vouchers/' + userId);
-            const data = await res.json();
+            const resp = await fetch('/users/vouchers/' + userId);
+            const data = await resp.json();
 
             loading.classList.add('hidden');
             content.classList.remove('hidden');
 
             if (data.status === 'success' && data.vouchers && data.vouchers.length > 0) {
                 data.vouchers.forEach(v => {
-                    const isExpired = v.status === 'expired' || new Date(v.expires_at) < new Date();
-                    const statusBadge = v.status === 'redeemed' 
-                        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">Redeemed</span>'
-                        : (isExpired 
-                            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">Expired</span>'
-                            : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>');
+                    const isExpired = v.status !== 'active' || (new Date(v.expires_at) < new Date());
+                    const statusBadge = !isExpired
+                        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Aktif</span>'
+                        : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Expired</span>';
 
-                    const revokeBtn = (!isExpired && v.status === 'active')
-                        ? `<a href="/users/revoke-voucher/${v.id}" class="px-2 py-1 text-[10px] font-bold text-red-600 hover:bg-red-50 rounded border border-red-200 transition-colors">Cabut</a>`
+                    const revokeBtn = !isExpired
+                        ? `<a href="/users/revoke-voucher/${v.id}" 
+                              data-confirm="Cabut voucher ${v.voucher_code} ini?" 
+                              data-confirm-title="Cabut Voucher" 
+                              class="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] border border-red-200 transition-colors">
+                              Cabut
+                           </a>`
                         : '';
 
                     const item = document.createElement('div');
-                    item.className = 'p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs';
+                    item.className = 'p-3 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 flex items-center justify-between gap-3 text-xs';
                     item.innerHTML = `
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="font-mono font-bold text-sm text-red-600">${v.voucher_code}</span>
+                                <span class="font-mono font-bold text-red-600">${v.voucher_code}</span>
                                 ${statusBadge}
-                                ${v.injected_by ? '<span class="text-[9px] font-mono bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">Injected by ' + v.injected_by + '</span>' : ''}
+                                ${v.merchant_name ? `<span class="text-[11px] text-slate-600 font-medium">(${v.merchant_name})</span>` : ''}
                             </div>
-                            <div class="font-semibold text-slate-800 mt-0.5 truncate">${v.discount_description || v.merchant_name || 'Voucher Promo'}</div>
-                            <div class="text-[10px] text-slate-400 mt-0.5">
+                            <div class="text-[11px] text-slate-600 mt-0.5">${v.discount_description || '-'}</div>
+                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">
                                 Berakhir: <span class="font-mono font-semibold">${new Date(v.expires_at).toLocaleString('id-ID')}</span>
                             </div>
                         </div>
@@ -789,7 +876,6 @@
         document.getElementById('userVouchersModal').classList.add('hidden');
     }
 
-    // Initialize pagination on load
     applyFilters();
 </script>
 

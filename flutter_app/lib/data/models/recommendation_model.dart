@@ -10,10 +10,17 @@ class RecommendationResponse {
   });
 
   factory RecommendationResponse.fromJson(Map<String, dynamic> json) {
+    // Determine data map: check 'data' key or fallback to top-level json map
+    final Map<String, dynamic> dataMap = (json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : (json['data'] is Map
+            ? Map<String, dynamic>.from(json['data'] as Map)
+            : json);
+
     return RecommendationResponse(
-      status: json['status'] ?? 'success',
-      sessionId: json['session_id'] ?? '',
-      data: RecommendationData.fromJson(json['data'] ?? {}),
+      status: json['status']?.toString() ?? 'success',
+      sessionId: json['session_id']?.toString() ?? dataMap['session_id']?.toString() ?? '',
+      data: RecommendationData.fromJson(dataMap),
     );
   }
 }
@@ -34,16 +41,46 @@ class RecommendationData {
   });
 
   factory RecommendationData.fromJson(Map<String, dynamic> json) {
+    String detectedMood = (json['detected_mood'] ?? '').toString();
+    String rationale = (json['rationale'] ?? '').toString();
+
+    // Check nested sentiment block if top-level fields are empty
+    if (json['sentiment'] is Map) {
+      final s = json['sentiment'] as Map;
+      if (detectedMood.isEmpty) {
+        detectedMood = s['detected_mood']?.toString() ?? '';
+      }
+      if (rationale.isEmpty) {
+        rationale = s['mood_rationale']?.toString() ??
+            s['rationale']?.toString() ??
+            '';
+      }
+    }
+
+    if (detectedMood.isEmpty) detectedMood = 'Comfort Seeking';
+    if (rationale.isEmpty) {
+      rationale = 'Pilihan hidangan terbaik yang cocok untuk menemani dan memulihkan suasana hatimu saat ini.';
+    }
+
+    final rawPlaces = json['places'] as List<dynamic>? ?? [];
+    final List<PlaceModel> places = [];
+    for (final item in rawPlaces) {
+      if (item is Map<String, dynamic>) {
+        places.add(PlaceModel.fromJson(item));
+      } else if (item is Map) {
+        places.add(PlaceModel.fromJson(Map<String, dynamic>.from(item)));
+      }
+    }
+
+    final rawRecipes = json['home_recipes'] as List<dynamic>? ?? [];
+    final List<String> homeRecipes = rawRecipes.map((e) => e.toString()).toList();
+
     return RecommendationData(
-      isRelevant: json['is_relevant'] ?? true,
-      detectedMood: json['detected_mood'] ?? 'Comfort',
-      rationale: json['rationale'] ?? '',
-      places: (json['places'] as List<dynamic>? ?? [])
-          .map((item) => PlaceModel.fromJson(item))
-          .toList(),
-      homeRecipes: (json['home_recipes'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
+      isRelevant: json['is_relevant'] is bool ? json['is_relevant'] as bool : true,
+      detectedMood: detectedMood,
+      rationale: rationale,
+      places: places,
+      homeRecipes: homeRecipes,
     );
   }
 }
@@ -82,21 +119,43 @@ class PlaceModel {
   });
 
   factory PlaceModel.fromJson(Map<String, dynamic> json) {
+    double parsedDistance = 1.0;
+    if (json['distance_km'] is num) {
+      parsedDistance = (json['distance_km'] as num).toDouble();
+    } else if (json['distance_km'] is String) {
+      parsedDistance = double.tryParse(json['distance_km']) ?? 1.0;
+    }
+
+    double parsedRating = 4.5;
+    if (json['rating'] is num) {
+      parsedRating = (json['rating'] as num).toDouble();
+    } else if (json['rating'] is String) {
+      parsedRating = double.tryParse(json['rating']) ?? 4.5;
+    }
+
+    final voucherMap = json['voucher'] is Map
+        ? Map<String, dynamic>.from(json['voucher'] as Map)
+        : <String, dynamic>{};
+
+    final actionLinksMap = json['action_links'] is Map
+        ? Map<String, dynamic>.from(json['action_links'] as Map)
+        : <String, dynamic>{};
+
     return PlaceModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? 'Tempat Makan',
-      category: json['category'] ?? 'Kuliner',
-      address: json['address'] ?? '',
-      distanceKm: (json['distance_km'] is num) ? (json['distance_km'] as num).toDouble() : 1.0,
-      rating: (json['rating'] is num) ? (json['rating'] as num).toDouble() : 4.5,
-      photoUrl: json['photo_url'] ?? '',
-      moodBadge: json['mood_badge'] ?? 'Rekomendasi',
-      priceRange: json['price_range'] ?? 'Rp 20.000 - Rp 40.000',
-      isSponsored: json['is_sponsored'] ?? false,
-      isOpen: json['is_open'] as bool? ?? true,
-      openingHours: json['opening_hours'] as String?,
-      voucher: VoucherModel.fromJson(json['voucher'] ?? {}),
-      actionLinks: ActionLinksModel.fromJson(json['action_links'] ?? {}),
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Tempat Makan',
+      category: json['category']?.toString() ?? 'Kuliner',
+      address: json['address']?.toString() ?? '',
+      distanceKm: parsedDistance,
+      rating: parsedRating,
+      photoUrl: json['photo_url']?.toString() ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+      moodBadge: json['mood_badge']?.toString() ?? 'Rekomendasi',
+      priceRange: json['price_range']?.toString() ?? 'Rp 20.000 - Rp 45.000',
+      isSponsored: json['is_sponsored'] == true || json['is_sponsored'] == 1,
+      isOpen: json['is_open'] == null ? true : (json['is_open'] == true || json['is_open'] == 1),
+      openingHours: json['opening_hours']?.toString(),
+      voucher: VoucherModel.fromJson(voucherMap),
+      actionLinks: ActionLinksModel.fromJson(actionLinksMap),
     );
   }
 }
@@ -119,13 +178,20 @@ class VoucherModel {
   });
 
   factory VoucherModel.fromJson(Map<String, dynamic> json) {
+    int parsedDuration = 15;
+    if (json['duration_minutes'] is num) {
+      parsedDuration = (json['duration_minutes'] as num).toInt();
+    } else if (json['duration_minutes'] is String) {
+      parsedDuration = int.tryParse(json['duration_minutes']) ?? 15;
+    }
+
     return VoucherModel(
-      hasVoucher: json['has_voucher'] ?? false,
-      merchantId: json['merchant_id'],
-      voucherCode: json['voucher_code'],
-      type: json['type'] ?? 'timer',
-      discountText: json['discount_text'],
-      durationMinutes: json['duration_minutes'] ?? 15,
+      hasVoucher: json['has_voucher'] == true || json['has_voucher'] == 1,
+      merchantId: json['merchant_id']?.toString(),
+      voucherCode: json['voucher_code']?.toString(),
+      type: json['type']?.toString() ?? 'timer',
+      discountText: json['discount_text']?.toString(),
+      durationMinutes: parsedDuration,
     );
   }
 }
@@ -143,9 +209,9 @@ class ActionLinksModel {
 
   factory ActionLinksModel.fromJson(Map<String, dynamic> json) {
     return ActionLinksModel(
-      googleMaps: json['google_maps'],
-      deliveryApp: json['delivery_app'],
-      whatsappBooking: json['whatsapp_booking'],
+      googleMaps: json['google_maps']?.toString(),
+      deliveryApp: json['delivery_app']?.toString(),
+      whatsappBooking: json['whatsapp_booking']?.toString(),
     );
   }
 }

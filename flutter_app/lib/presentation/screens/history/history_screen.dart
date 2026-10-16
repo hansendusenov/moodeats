@@ -6,6 +6,7 @@ import 'package:moodeats_app/core/localization/app_strings.dart';
 import 'package:moodeats_app/data/models/history_session_model.dart';
 import 'package:moodeats_app/data/providers/app_providers.dart';
 import 'package:moodeats_app/data/services/firebase_auth_service.dart';
+import 'package:moodeats_app/data/services/app_cache_service.dart';
 import 'package:moodeats_app/presentation/screens/results/results_screen.dart';
 import 'package:moodeats_app/presentation/widgets/voucher_countdown_dialog.dart';
 import 'package:moodeats_app/presentation/widgets/bouncy_tap.dart';
@@ -78,6 +79,91 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
   }
 
+    Future<void> _confirmClearHistory(WidgetRef ref, AppLanguage lang) async {
+    final isId = lang == AppLanguage.id;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_outline_rounded, color: AppColors.primary, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              isId ? 'Hapus Riwayat Pencarian?' : 'Clear Search History?',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isId
+                  ? 'Sesuai UU Pelindungan Data Pribadi (UU PDP No. 27/2022 Pasal 43):'
+                  : 'In compliance with Data Protection Law (UU PDP No. 27/2022):',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isId
+                  ? '''- Seluruh riwayat pencarian Anda akan diputus (unlinked, user_id = NULL) dari profil akun Anda di server.\n- File cache offline pada penyimpanan perangkat akan langsung dihapus.\n- Metrik tren rekomendasi mitra tetap akurat secara agregat anonim.'''
+                  : '''- Your search history will be unlinked (user_id = NULL) on the server.\n- Offline cache files on this device will be immediately wiped.\n- Merchant aggregate trend metrics remain preserved anonymously.''',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              isId ? 'Batal' : 'Cancel',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              isId ? 'Hapus & Bersihkan Cache' : 'Delete & Clear Cache',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final user = ref.read(authUserProvider);
+      final api = ref.read(apiServiceProvider);
+      if (user != null) {
+        await api.clearHistory(user.id);
+      } else {
+        AppCacheService.purgeHistory('guest');
+      }
+      ref.read(historyNotifierProvider.notifier).clearAll();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isId
+                ? 'Riwayat berhasil dihapus & cache offline dibersihkan!'
+                : 'History cleared & offline cache purged successfully!',
+          ),
+          backgroundColor: AppColors.happyGreen,
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final voucherState = ref.watch(activeVoucherProvider);
@@ -85,29 +171,80 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final historyScrollController = ref.watch(historyScrollControllerProvider);
     final lang = ref.watch(appLanguageProvider);
     final tr = AppStrings.of(lang);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          tr.historyTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        automaticallyImplyLeading: false,
-      ),
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: Text(
+                tr.historyTitle,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0.5,
+              automaticallyImplyLeading: false,
+              actions: [
+                if (historyState.items.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.textSecondary),
+                    tooltip: lang == AppLanguage.id ? 'Hapus Riwayat' : 'Clear History',
+                    onPressed: () => _confirmClearHistory(ref, lang),
+                  ),
+              ],
+            ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          controller: historyScrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 960 : double.infinity),
+            child: SingleChildScrollView(
+              controller: historyScrollController,
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 32.0 : 20.0,
+                vertical: isDesktop ? 28.0 : 20.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isDesktop) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('📜', style: TextStyle(fontSize: 24)),
+                            const SizedBox(width: 10),
+                            Text(
+                              tr.historyTitle,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (historyState.items.isNotEmpty)
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(color: AppColors.borderRed),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            icon: const Icon(Icons.delete_sweep_rounded, size: 18),
+                            label: Text(lang == AppLanguage.id ? 'Hapus Riwayat' : 'Clear History'),
+                            onPressed: () => _confirmClearHistory(ref, lang),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
               // Active Voucher Section (if any)
               if (voucherState.isActive) ...[
                 Text(
@@ -415,7 +552,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+  );
   }
 
   Widget _buildDateFilterBar(HistoryState historyState, bool isId) {

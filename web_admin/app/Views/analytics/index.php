@@ -308,13 +308,38 @@
                                 <div class="text-[11px] text-slate-400"><?= date('H:i:s', strtotime($s['created_at'])) ?> WIB</div>
                             </td>
 
-                            <!-- Curhatan Pengguna -->
+                            <!-- Curhatan Pengguna (UU PDP Minimised) -->
                             <td class="py-3 px-4 max-w-sm">
-                                <div class="text-slate-800 font-medium line-clamp-2" title="<?= esc($s['message_text']) ?>">
-                                    "<?= esc($s['message_text']) ?>"
+                                <?php
+                                    $msg = trim($s['message_text'] ?? '');
+                                    $intentLabel = '';
+                                    if (!empty($s['extracted_intent'])) {
+                                        $dec = is_array($s['extracted_intent']) ? $s['extracted_intent'] : json_decode($s['extracted_intent'], true);
+                                        if (!empty($dec['tags'])) {
+                                            $intentLabel = 'Intent: ' . implode(', ', array_slice($dec['tags'], 0, 3));
+                                        } elseif (!empty($dec['mood'])) {
+                                            $intentLabel = 'Mood: ' . $dec['mood'];
+                                        }
+                                    }
+                                    $isUnlinked = !empty($s['is_unlinked']) || empty($s['user_id']);
+                                ?>
+                                <div class="text-slate-800 font-medium line-clamp-2">
+                                    <?php if ($msg !== ''): ?>
+                                        "<?= esc($msg) ?>"
+                                    <?php elseif ($intentLabel !== ''): ?>
+                                        <span class="inline-flex items-center gap-1 text-slate-700 font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                            <span class="material-symbols-outlined text-[13px] text-blue-600">verified</span>
+                                            <?= esc($intentLabel) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-blue-600 font-semibold text-[11px]">[Minimisasi PDP: Intent Terolah]</span>
+                                    <?php endif; ?>
                                 </div>
-                                <div class="font-mono text-[10px] text-slate-400 mt-0.5">
-                                    ID: <?= substr($s['session_id'], 0, 8) ?>...
+                                <div class="font-mono text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                    <span>ID: <?= substr($s['session_id'], 0, 8) ?>...</span>
+                                    <?php if ($isUnlinked): ?>
+                                        <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Unlinked PDP</span>
+                                    <?php endif; ?>
                                 </div>
                             </td>
 

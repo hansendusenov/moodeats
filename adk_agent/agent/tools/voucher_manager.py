@@ -196,3 +196,46 @@ class VoucherManager:
 
         except Exception as e:
             return {"status": "error", "message": f"Gagal mengklaim voucher: {str(e)}"}
+
+
+    def get_active_vouchers(self, user_id: str) -> List[Dict[str, Any]]:
+        """
+        Returns all active claimed vouchers for a given user.
+        """
+        now_utc = datetime.now(timezone.utc)
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        SELECT uv.id, uv.merchant_id, uv.voucher_code, uv.status, uv.claimed_at, uv.expires_at,
+                               sm.merchant_name, sm.category, sm.discount_description, sm.image_url, sm.promo_badge
+                        FROM user_vouchers uv
+                        JOIN sponsored_merchants sm ON uv.merchant_id = sm.id
+                        WHERE uv.user_id = %s AND uv.status = 'active' AND uv.expires_at > %s
+                        ORDER BY uv.claimed_at DESC;
+                        """,
+                        (user_id, now_utc),
+                    )
+                    rows = cur.fetchall()
+                    vouchers = []
+                    for row in rows:
+                        uv_id, m_id, code, status, claimed_at, expires_at, m_name, cat, disc, img, badge = row
+                        rem_secs = max(0, int((expires_at - now_utc).total_seconds())) if expires_at else 0
+                        vouchers.append({
+                            "id": str(uv_id),
+                            "merchant_id": str(m_id),
+                            "merchant_name": m_name,
+                            "voucher_code": code,
+                            "status": status,
+                            "discount_description": disc,
+                            "claimed_at": claimed_at.isoformat() if claimed_at else None,
+                            "expires_at": expires_at.isoformat() if expires_at else None,
+                            "remaining_seconds": rem_secs,
+                            "image_url": img,
+                            "promo_badge": badge,
+                        })
+                    return vouchers
+        except Exception as e:
+            print(f"Error getting active vouchers: {e}")
+            return []

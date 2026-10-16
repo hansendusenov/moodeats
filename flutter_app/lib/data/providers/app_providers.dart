@@ -214,6 +214,10 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
   Future<void> refresh() async {
     await loadInitial();
   }
+
+  Future<void> clearAll() async {
+    state = const HistoryState(items: [], total: 0, hasMore: false);
+  }
 }
 
 final historyNotifierProvider =

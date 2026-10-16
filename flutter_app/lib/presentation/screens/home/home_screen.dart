@@ -1,3 +1,4 @@
+// import 'dart:io'; (omitted for web compatibility)
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -578,6 +579,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
       final imageBytes = await photo.readAsBytes();
       final mimeType = photo.path.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      // Cross-platform: XFile handles in-memory buffer cleanup
       final api = ref.read(apiServiceProvider);
       final analyzedPrompt = await api.analyzeImage(
         imageBytes: imageBytes,
@@ -694,37 +696,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final lang = ref.watch(appLanguageProvider);
     final tr = AppStrings.of(lang);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 800;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildTopAppBar(context, voucherState, userLocation, tr),
+      appBar: isDesktop ? null : _buildTopAppBar(context, voucherState, userLocation, tr),
       body: SafeArea(
-        child: SingleChildScrollView(
-          controller: homeScrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Active Voucher Floating Notification Banner (if claimed)
-              if (voucherState.isActive) _buildActiveVoucherBar(context, voucherState, tr),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 1080 : double.infinity),
+            child: SingleChildScrollView(
+              controller: homeScrollController,
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 32.0 : 0.0,
+                vertical: isDesktop ? 24.0 : 0.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Active Voucher Floating Notification Banner (if claimed)
+                  if (voucherState.isActive) _buildActiveVoucherBar(context, voucherState, tr),
 
-              // Time-based Greeting with User Full Name
-              _buildGreetingHeader(tr, authUser),
+                  // Time-based Greeting with User Full Name
+                  _buildGreetingHeader(tr, authUser),
 
-              // Banners Carousel
-              _buildBannersSection(bannersAsync),
-              const SizedBox(height: 16),
+                  // Banners Carousel
+                  _buildBannersSection(bannersAsync),
+                  const SizedBox(height: 16),
 
-              // Omni-Input Sentiment Search Bar
-              _buildOmniSearchBar(tr, lang),
-              const SizedBox(height: 20),
+                  // Omni-Input Sentiment Search Bar
+                  _buildOmniSearchBar(tr, lang),
+                  const SizedBox(height: 20),
 
-              // Quick Mood Chips Carousel
-              _buildQuickMoodsSection(tr),
-              const SizedBox(height: 24),
+                  // Quick Mood Chips Carousel
+                  _buildQuickMoodsSection(tr),
+                  const SizedBox(height: 24),
 
-              // Comfort Food / Curated Default Menus Section
-              _buildDefaultMenusSection(defaultMenusAsync, tr),
-              const SizedBox(height: 32),
-            ],
+                  // Comfort Food / Curated Default Menus Section
+                  _buildDefaultMenusSection(defaultMenusAsync, tr),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -748,7 +762,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: AppColors.redBg,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Text('🍲', style: TextStyle(fontSize: 18)),
+            child: Image.asset('assets/images/moodeats_mascot.png', width: 22, height: 22, fit: BoxFit.contain),
           ),
           const SizedBox(width: 8),
           const Text(
@@ -1012,7 +1026,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text('🍲', style: TextStyle(fontSize: 48)),
+                        Image.asset('assets/images/moodeats_mascot.png', width: 56, height: 56, fit: BoxFit.contain),
                       ],
                     ),
                   );
@@ -1437,104 +1451,143 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildMenusListView(List<MenuModel> menus, AppStrings tr) {
+  Widget _buildMenusListView(List<MenuModel> rawMenus, AppStrings tr) {
+    final seen = <String>{};
+    final menus = rawMenus.where((m) => seen.add(m.foodName)).toList();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 800;
+
+    if (isDesktop) {
+      final crossAxisCount = screenWidth >= 1100 ? 3 : 2;
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: menus.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: 2.7,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+        ),
+        itemBuilder: (context, index) {
+          final menu = menus[index];
+          return _buildMenuItemCard(menu, tr);
+        },
+      );
+    }
+
     return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: menus.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final menu = menus[index];
-                return BouncyTap(
-                  onTap: () {
-                    _searchController.text = tr.isId
-                        ? 'Pengen makan ${menu.foodName}. ${menu.description}'
-                        : 'Craving ${menu.foodName}. ${menu.description}';
-                    _executeAgentSearch(_searchController.text, tr);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: AppColors.redBg,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Center(
-                            child: Text('🍲', style: TextStyle(fontSize: 26)),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                menu.foodName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                menu.description ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text(
-                                    menu.priceEst ?? 'Rp 25.000',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surfaceVariant,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      menu.category,
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
-                      ],
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: menus.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final menu = menus[index];
+        return _buildMenuItemCard(menu, tr);
+      },
+    );
+  }
+
+  Widget _buildMenuItemCard(MenuModel menu, AppStrings tr) {
+    return BouncyTap(
+      onTap: () {
+        _searchController.text = tr.isId
+            ? 'Pengen makan ${menu.foodName}. ${menu.description}'
+            : 'Craving ${menu.foodName}. ${menu.description}';
+        _executeAgentSearch(_searchController.text, tr);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.redBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Text('🍲', style: TextStyle(fontSize: 24)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    menu.foodName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                );
-              },
-            );
+                  const SizedBox(height: 2),
+                  Text(
+                    menu.description ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        menu.priceEst ?? 'Rp 25.000',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11.5,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          menu.category,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showLocationPickerSheet(BuildContext context, UserLocation currentLocation, AppStrings tr) {

@@ -199,9 +199,12 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-          child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Icon Header
@@ -510,6 +513,8 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+  );
   }
 }

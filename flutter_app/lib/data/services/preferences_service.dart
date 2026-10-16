@@ -8,6 +8,7 @@ import 'firebase_auth_service.dart';
 
 class PreferencesService {
   static String? _baseDirPath;
+  static UserPreferencesModel _webPrefs = const UserPreferencesModel();
 
   static String get _getStorageDir {
     if (_baseDirPath != null) return _baseDirPath!;
@@ -33,6 +34,7 @@ class PreferencesService {
   static String get _filePath => '$_getStorageDir/moodeats_preferences.json';
 
   static UserPreferencesModel load() {
+    if (kIsWeb) return _webPrefs;
     try {
       final file = File(_filePath);
       if (file.existsSync()) {
@@ -47,6 +49,10 @@ class PreferencesService {
   }
 
   static void save(UserPreferencesModel prefs) {
+    if (kIsWeb) {
+      _webPrefs = prefs;
+      return;
+    }
     try {
       final file = File(_filePath);
       file.writeAsStringSync(jsonEncode(prefs.toJson()), flush: true);

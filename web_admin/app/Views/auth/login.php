@@ -4,6 +4,8 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Login - MoodEats Web Admin Console</title>
+    <link rel="icon" type="image/png" href="/assets/images/moodeats_mascot.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -18,9 +20,7 @@
 <div class="w-full max-w-md">
     <!-- Brand Header -->
     <div class="text-center mb-8">
-        <div class="inline-flex w-14 h-14 rounded-2xl bg-red-600 items-center justify-center text-white shadow-lg shadow-red-200 mb-3">
-            <span class="material-symbols-outlined text-[32px]">restaurant_menu</span>
-        </div>
+        <img src="/assets/images/moodeats_mascot.png" class="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-md" alt="MoodEats Mascot"/>
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">MoodEats Admin</h1>
         <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-mono">Autonomous Culinary Engine Console</p>
     </div>

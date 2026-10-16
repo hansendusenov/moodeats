@@ -1,11 +1,13 @@
 """
 MoodEats ADK Agent - FastAPI Service & Master API Contracts
 Implements PRD Section 6, 7 & 9 full API contracts for Mobile & Web clients.
+Complies with UU PDP No. 27/2022 (Data Minimisation, Audit Trails, and Subject Rights).
 """
 
 import uuid
 import json
 import base64
+import hashlib
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, Request, HTTPException, Query, status
@@ -20,6 +22,16 @@ from adk_agent.config import get_settings
 from adk_agent.agent.moodeats_agent import MoodEatsAgent
 from adk_agent.agent.tools.voucher_manager import VoucherManager
 from adk_agent.middleware.rate_limiter import RateLimiter
+from adk_agent.services.media_sanitizer import sanitize_image_buffer
+from adk_agent.services.audit_service import (
+    record_security_audit,
+    purge_logs_ttl,
+    unlink_user_session_history,
+    request_user_deletion,
+    cancel_user_deletion,
+    run_account_lifecycle,
+    get_user_status_and_ban_check,
+)
 
 app = FastAPI(
     title="MoodEats Culinary Intelligence Engine",
@@ -50,12 +62,11 @@ def get_db_connection():
         dbname=settings.supabase_db_name,
         user=settings.supabase_db_user,
         password=settings.supabase_db_password,
-        connect_timeout=3,
     )
 
 
 # ---------------------------------------------------------
-# Schemas (PRD Section 7)
+# Request / Response Schemas
 # ---------------------------------------------------------
 
 class RecommendRequest(BaseModel):
@@ -101,6 +112,60 @@ class AnalyzeImageRequest(BaseModel):
     lang: Optional[str] = Field(default="id", description="Language code: 'id' or 'en'")
 
 
+class UserDeletionRequest(BaseModel):
+    user_id: str = Field(..., description="UUID user profile requesting deletion")
+    reason: Optional[str] = Field(default="User requested account deletion", description="Alasan penghapusan")
+
+
+class UserCancelDeletionRequest(BaseModel):
+    user_id: str = Field(..., description="UUID user profile cancelling deletion")
+
+
+# ---------------------------------------------------------
+# Security Guardrails & Moderation Helpers
+# ---------------------------------------------------------
+
+def check_user_active(user_id: Optional[str]):
+    """
+    Enforces ban status and dormant reactivation from user_profiles.
+    Complies with UU PDP Article 35 security controls.
+    """
+    if not user_id:
+        return
+    status_info = get_user_status_and_ban_check(user_id)
+    if status_info.get("is_banned"):
+        reason = status_info.get("ban_reason") or "Akun Anda dinonaktifkan oleh administrator MoodEats."
+        record_security_audit(
+            event_type="SECURITY_BLOCKED_BANNED_USER",
+            severity="critical",
+            action="BLOCK_ACCESS",
+            actor_id=user_id,
+            details={"reason": reason},
+            is_suspicious=True,
+        )
+        raise HTTPException(status_code=403, detail=f"Akun Anda diblokir: {reason}")
+
+    # Auto-reactivate dormant accounts when user performs activity
+    if status_info.get("status") == "dormant":
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "UPDATE user_profiles SET status = 'active', last_active_at = NOW(), updated_at = NOW() WHERE id = %s;",
+                        (user_id,),
+                    )
+                conn.commit()
+            record_security_audit(
+                event_type="USER_DORMANT_REACTIVATED",
+                severity="info",
+                action="REACTIVATE_ACCOUNT",
+                actor_id=user_id,
+                details={"previous_status": "dormant"},
+            )
+        except Exception as e:
+            logger.warning(f"Could not reactivate dormant account: {e}")
+
+
 # ---------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------
@@ -111,12 +176,13 @@ def root():
         "service": "MoodEats Culinary Intelligence Engine",
         "status": "online",
         "model": "gemini-2.5-flash",
+        "pdp_compliance": "UU PDP No. 27/2022 Enabled",
         "api_docs": "/docs",
     }
 
 
 @app.get("/health")
-def health():
+def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -126,33 +192,15 @@ def health():
     }
 
 
-def check_user_active(user_id: Optional[str]):
-    """
-    Enforce ban status from user_profiles. If banned, reject with 403 Forbidden.
-    """
-    if not user_id:
-        return
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT is_banned, banned_reason FROM user_profiles WHERE id = %s;", (user_id,))
-                row = cur.fetchone()
-                if row and row[0]:
-                    reason = row[1] or "Akun Anda dinonaktifkan oleh administrator MoodEats."
-                    raise HTTPException(status_code=403, detail=f"Akun Anda diblokir: {reason}")
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.warning(f"Could not verify user ban status: {e}")
-
-
 @app.post("/api/v1/agent/recommend")
 async def recommend(payload: RecommendRequest, request: Request):
     """
     PRD 7.1 POST /api/v1/agent/recommend
     Consultation endpoint mapping mood, time, and GPS to physical dishes & sponsored vouchers.
+    UU PDP Compliance: Raw personal venting text is NOT stored. Only extracted culinary intent,
+    sentiment category, and merchant matching metadata are retained for analytics.
     """
-    # Ban status check
+    # Ban status & dormant check
     check_user_active(payload.user_id)
 
     # Rate Limiting Guardrail (PRD 10.3)
@@ -175,21 +223,29 @@ async def recommend(payload: RecommendRequest, request: Request):
 
     is_relevant = result.get("is_relevant", True)
 
-    # Persist session to mood_sessions table in Supabase
+    # Persist session to mood_sessions table in Supabase (Data Minimisation)
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
+                # Extracted intent schema - strips user raw text to satisfy UU PDP
+                extracted_intent_data = {
+                    "detected_mood": result.get("detected_mood"),
+                    "food_categories": result.get("food_categories", []),
+                    "sentiment_score": result.get("sentiment_score", 0),
+                    "dietary_type": payload.dietary_type,
+                    "is_halal_only": payload.is_halal_only,
+                    "city": payload.city,
+                }
                 cur.execute(
                     """
                     INSERT INTO mood_sessions 
-                    (session_id, user_id, role, message_text, detected_mood, food_categories, location_lat, location_lng, city_detected, ai_response_payload, device_os, app_version)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    (session_id, user_id, role, message_text, detected_mood, food_categories, location_lat, location_lng, city_detected, ai_response_payload, device_os, app_version, extracted_intent, is_unlinked)
+                    VALUES (%s, %s, %s, NULL, %s, %s, %s, %s, %s, %s, %s, %s, %s, FALSE);
                     """,
                     (
                         session_id,
                         payload.user_id,
                         "user",
-                        payload.prompt,
                         result.get("detected_mood"),
                         json.dumps(result.get("food_categories", [])),
                         payload.lat,
@@ -198,6 +254,7 @@ async def recommend(payload: RecommendRequest, request: Request):
                         json.dumps(result),
                         payload.device_os,
                         payload.app_version,
+                        json.dumps(extracted_intent_data),
                     ),
                 )
                 if payload.user_id:
@@ -218,10 +275,38 @@ async def recommend(payload: RecommendRequest, request: Request):
 
     status_str = "success" if is_relevant else "rejected"
 
+    detected_mood = result.get("detected_mood") or "Comfort Seeking"
+    rationale = result.get("rationale") or result.get("mood_rationale") or "Pilihan kuliner terbaik yang cocok untuk menghangatkan suasana hatimu."
+    places = result.get("places", [])
+    home_recipes = result.get("home_recipes", [])
+
     return {
         "status": status_str,
+        "is_relevant": is_relevant,
         "session_id": session_id,
-        "data": result,
+        "detected_mood": detected_mood,
+        "rationale": rationale,
+        "sentiment": {
+            "detected_mood": detected_mood,
+            "sentiment_score": result.get("sentiment_score", 0),
+            "emotional_intensity": result.get("emotional_intensity", "medium"),
+            "mood_rationale": rationale,
+            "rationale": rationale,
+        },
+        "food_recommendations": {
+            "categories": result.get("food_categories", []),
+            "nutrition_tags": result.get("nutrition_tags", []),
+        },
+        "places": places,
+        "home_recipes": home_recipes,
+        "disclaimer": result.get("disclaimer"),
+        "data": {
+            "is_relevant": is_relevant,
+            "detected_mood": detected_mood,
+            "rationale": rationale,
+            "places": places,
+            "home_recipes": home_recipes,
+        },
     }
 
 
@@ -236,7 +321,7 @@ def get_session_history(
     """
     Returns consultation history from mood_sessions table for mobile client.
     Supports today-only default filter, custom date ranges, and offset-based pagination.
-    Includes full cached_response for 0-latency offline review.
+    Only returns linked, non-erased history for the user.
     """
     sessions = []
     total_count = 0
@@ -249,6 +334,8 @@ def get_session_history(
                 if user_id:
                     where_clauses.append("user_id = %s")
                     params.append(user_id)
+                    # Filter out unlinked sessions
+                    where_clauses.append("(is_unlinked = FALSE OR is_unlinked IS NULL)")
 
                 if start_date == "ALL":
                     # Explicitly requested all history without date filtering
@@ -276,7 +363,7 @@ def get_session_history(
                 # 2. Fetch paginated records
                 data_query = f"""
                     SELECT id, session_id, message_text, detected_mood, food_categories, 
-                           city_detected, ai_response_payload, created_at
+                           city_detected, ai_response_payload, created_at, extracted_intent
                     FROM mood_sessions
                     {where_sql}
                     ORDER BY created_at DESC
@@ -286,7 +373,7 @@ def get_session_history(
                 cur.execute(data_query, fetch_params)
 
                 for row in cur.fetchall():
-                    row_id, sess_id, msg, mood, foods, city, payload, created_at = row
+                    row_id, sess_id, msg, mood, foods, city, payload, created_at, intent_data = row
                     
                     first_restaurant = None
                     has_voucher = False
@@ -308,48 +395,109 @@ def get_session_history(
                         except Exception:
                             food_cats = [foods]
 
+                    # User prompt display: use mood summary to avoid displaying sensitive rants
+                    display_prompt = f"Suasana hati: {mood}" if mood else "Sesi Rekomendasi Kuliner"
+
                     sessions.append({
                         "id": str(row_id),
-                        "session_id": sess_id,
-                        "title": msg,
-                        "detected_mood": mood or "Mood Seimbang",
-                        "restaurant": first_restaurant or (food_cats[0] if food_cats else "Rekomendasi Kuliner"),
+                        "session_id": str(sess_id),
+                        "prompt": display_prompt,
+                        "detected_mood": mood or "Netral",
                         "food_categories": food_cats,
-                        "city": city,
+                        "city": city or "Jakarta",
+                        "first_restaurant_name": first_restaurant,
                         "has_voucher": has_voucher,
                         "cached_response": p_data,
                         "created_at": created_at.isoformat() if created_at else None,
                     })
-    except Exception as e:
-        print(f"Error fetching session history: {e}")
 
-    return {
-        "status": "success",
-        "count": len(sessions),
-        "total": total_count,
-        "has_more": (offset + len(sessions)) < total_count,
-        "offset": offset,
-        "limit": limit,
-        "history": sessions,
-    }
+        return {
+            "status": "success",
+            "count": len(sessions),
+            "total_count": total_count,
+            "offset": offset,
+            "limit": limit,
+            "has_more": (offset + len(sessions)) < total_count,
+            "sessions": sessions,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching session history: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "sessions": [],
+            "total_count": 0,
+            "offset": offset,
+            "limit": limit,
+            "has_more": False,
+        }
+
+
+@app.delete("/api/v1/sessions/history")
+def delete_session_history(user_id: str = Query(..., description="UUID user profile to unlink history for")):
+    """
+    Right to Erasure (History): Unlinks all session history for the user.
+    Preserves aggregate culinary & merchant trends by setting user_id = NULL and is_unlinked = TRUE,
+    while removing all personal associations.
+    """
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+    
+    try:
+        unlinked_count = unlink_user_session_history(user_id)
+        return {
+            "status": "success",
+            "message": "Riwayat sesi berhasil diputus dari profil pengguna untuk melindungi privasi Anda.",
+            "unlinked_sessions_count": unlinked_count,
+        }
+    except Exception as e:
+        logger.error(f"Error unlinking user history: {e}")
+        raise HTTPException(status_code=500, detail=f"Gagal memutus riwayat sesi: {str(e)}")
 
 
 @app.post("/api/v1/users/sync")
 def sync_user_profile(payload: UserSyncRequest):
     """
-    Syncs mobile user profile (Firebase or guest) into Postgres user_profiles table.
+    Syncs mobile user profile into Postgres user_profiles table.
+    Enforces anti-fraud ban check via SHA-256 email hashing and retains device telemetry signature.
     """
     try:
+        norm_email = payload.email.strip().lower()
+        email_hash = hashlib.sha256(norm_email.encode("utf-8")).hexdigest()
         allergies_json = json.dumps(payload.allergies) if payload.allergies is not None else None
+
         with get_db_connection() as conn:
             with conn.cursor() as cur:
+                # Anti-ban evasion check: check if user_id or email_hash is banned
+                cur.execute(
+                    """
+                    SELECT id, ban_reason FROM user_profiles 
+                    WHERE (id = %s OR email_hash = %s) AND status = 'banned';
+                    """,
+                    (payload.user_id, email_hash),
+                )
+                banned_match = cur.fetchone()
+                if banned_match:
+                    reason = banned_match[1] or "Akun Anda dinonaktifkan secara permanen."
+                    record_security_audit(
+                        event_type="SECURITY_BLOCKED_BANNED_RE_REGISTRATION",
+                        severity="critical",
+                        action="BLOCK_SYNC",
+                        actor_id=payload.user_id,
+                        details={"email_hash": email_hash, "ban_reason": reason},
+                        is_suspicious=True,
+                    )
+                    raise HTTPException(status_code=403, detail=f"Registrasi diblokir: {reason}")
+
+                device_sig = f"{payload.device_model or ''}|{payload.device_os or ''}".strip()
+
                 cur.execute(
                     """
                     INSERT INTO user_profiles (
                         id, display_name, email, phone, gender, birth_date, is_banned,
                         device_model, device_os, app_version, is_halal_only, dietary_type, allergies,
-                        last_active_at, updated_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, FALSE, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                        status, email_hash, device_telemetry_signature, last_active_at, updated_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, FALSE, %s, %s, %s, %s, %s, %s, 'active', %s, %s, NOW(), NOW())
                     ON CONFLICT (id) DO UPDATE SET
                         display_name = EXCLUDED.display_name,
                         email = EXCLUDED.email,
@@ -362,6 +510,9 @@ def sync_user_profile(payload: UserSyncRequest):
                         is_halal_only = COALESCE(EXCLUDED.is_halal_only, user_profiles.is_halal_only),
                         dietary_type = COALESCE(EXCLUDED.dietary_type, user_profiles.dietary_type),
                         allergies = COALESCE(EXCLUDED.allergies, user_profiles.allergies),
+                        email_hash = EXCLUDED.email_hash,
+                        device_telemetry_signature = COALESCE(EXCLUDED.device_telemetry_signature, user_profiles.device_telemetry_signature),
+                        status = CASE WHEN user_profiles.status = 'banned' THEN 'banned' ELSE 'active' END,
                         last_active_at = NOW(),
                         updated_at = NOW();
                     """,
@@ -378,12 +529,78 @@ def sync_user_profile(payload: UserSyncRequest):
                         payload.is_halal_only,
                         payload.dietary_type,
                         allergies_json,
+                        email_hash,
+                        device_sig or None,
                     ),
                 )
                 conn.commit()
         return {"status": "success", "message": "User profile synchronized successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to sync user profile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/users/delete-request")
+def request_account_deletion_endpoint(payload: UserDeletionRequest):
+    """
+    Right to Erasure (Account): Initiates 30-day grace period for account deletion.
+    Status updated to 'pending_deletion'. Users can cancel within 30 days.
+    """
+    check_user_active(payload.user_id)
+    try:
+        request_user_deletion(payload.user_id, payload.reason or "User requested account deletion")
+        return {
+            "status": "pending_deletion",
+            "message": "Permintaan penghapusan akun berhasil dicatat. Sesuai UU PDP, akun Anda memasuki masa tenggang 30 hari sebelum data pribadi di-anonymize secara permanen.",
+            "grace_period_days": 30,
+        }
+    except Exception as e:
+        logger.error(f"Error requesting account deletion: {e}")
+        raise HTTPException(status_code=500, detail=f"Gagal memproses permintaan hapus akun: {str(e)}")
+
+
+@app.post("/api/v1/users/cancel-delete")
+def cancel_account_deletion_endpoint(payload: UserCancelDeletionRequest):
+    """
+    Cancels account deletion during 30-day grace period. Restores account to active status.
+    """
+    try:
+        cancel_user_deletion(payload.user_id)
+        return {
+            "status": "active",
+            "message": "Permintaan penghapusan akun berhasil dibatalkan. Akun MoodEats Anda kembali aktif sepenuhnya.",
+        }
+    except Exception as e:
+        logger.error(f"Error cancelling account deletion: {e}")
+        raise HTTPException(status_code=500, detail=f"Gagal membatalkan penghapusan akun: {str(e)}")
+
+
+@app.post("/api/v1/admin/maintenance/pdp-lifecycle")
+def run_pdp_maintenance_lifecycle(retention_days: int = Query(90)):
+    """
+    Automated Maintenance Runner:
+    1. Executes purge_expired_audit_logs(retention_days) for security audit log TTL.
+    2. Runs process_dormant_and_expired_accounts() to auto-flag dormant accounts and crypto-shred expired deletion requests.
+    """
+    try:
+        purged_logs = purge_logs_ttl(retention_days)
+        lifecycle_stats = run_account_lifecycle()
+        record_security_audit(
+            event_type="MAINTENANCE_LIFECYCLE_RUN",
+            severity="info",
+            action="RUN_MAINTENANCE",
+            actor_role="scheduler",
+            details={"purged_logs": purged_logs, "lifecycle_stats": lifecycle_stats},
+        )
+        return {
+            "status": "success",
+            "purged_audit_logs": purged_logs,
+            "lifecycle_stats": lifecycle_stats,
+        }
+    except Exception as e:
+        logger.error(f"Maintenance lifecycle error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -394,110 +611,91 @@ def claim_voucher(payload: ClaimVoucherRequest):
     Claims a 15-minute countdown promotional voucher for a sponsored merchant.
     """
     check_user_active(payload.user_id)
-    response = voucher_manager.claim_voucher(
-        merchant_id=payload.merchant_id,
-        user_id=payload.user_id,
-    )
-    if response.get("status") == "error":
-        raise HTTPException(status_code=400, detail=response.get("message"))
 
-    return response
+    if not payload.user_id:
+        return {
+            "status": "error",
+            "message": "Silakan login terlebih dahulu untuk mengklaim voucher promosi.",
+        }
+
+    try:
+        res = voucher_manager.claim_voucher(payload.merchant_id, payload.user_id)
+        return res
+    except Exception as e:
+        logger.error(f"Error claiming voucher: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/v1/vouchers/my")
-def get_user_active_vouchers(user_id: str = Query(...)):
+def get_my_vouchers(user_id: str = Query(..., description="ID user")):
     """
-    Returns active vouchers for a specific user (including admin-injected vouchers).
+    PRD 7.2 GET /api/v1/vouchers/my
+    Returns all claimed active vouchers with remaining seconds.
     """
     check_user_active(user_id)
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT uv.id, uv.merchant_id, uv.voucher_code, uv.status, uv.discount_description,
-                           uv.claimed_at, uv.expires_at, sm.merchant_name, sm.discount_description, sm.image_url
-                    FROM user_vouchers uv
-                    LEFT JOIN sponsored_merchants sm ON uv.merchant_id = sm.id
-                    WHERE uv.user_id = %s AND uv.status = 'active' AND uv.expires_at > NOW()
-                    ORDER BY uv.claimed_at DESC;
-                    """,
-                    (user_id,),
-                )
-                rows = cur.fetchall()
-                vouchers = []
-                now_utc = datetime.now(timezone.utc)
-                for r in rows:
-                    expires_dt = r[6]
-                    seconds_left = max(0, int((expires_dt - now_utc).total_seconds())) if expires_dt else 0
-                    vouchers.append({
-                        "id": str(r[0]),
-                        "merchant_id": str(r[1]) if r[1] else None,
-                        "voucher_code": r[2],
-                        "status": r[3],
-                        "discount_description": r[4] or r[8] or "Diskon Spesial Injeksi Admin",
-                        "claimed_at": r[5].isoformat() if r[5] else None,
-                        "expires_at": r[6].isoformat() if r[6] else None,
-                        "merchant_name": r[7] or "MoodEats Platform Promo",
-                        "image_url": r[9],
-                        "seconds_remaining": seconds_left,
-                    })
-                return {"status": "success", "vouchers": vouchers}
-    except HTTPException:
-        raise
+        vouchers = voucher_manager.get_active_vouchers(user_id)
+        return {
+            "status": "success",
+            "count": len(vouchers),
+            "vouchers": vouchers,
+        }
     except Exception as e:
-        logger.error(f"Failed to fetch user vouchers: {e}")
-        return {"status": "error", "message": str(e), "vouchers": []}
+        logger.error(f"Error fetching active vouchers: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "vouchers": [],
+        }
 
 
 @app.get("/api/v1/roulette")
-def get_roulette_items():
+def get_roulette_dishes():
     """
-    PRD 9.3 Bite Roulette (Roda Keberuntungan Kuliner)
-    Returns curated comfort food segments for the spinning wheel gamification.
-    Provides bilingual Indonesian & English metadata.
+    PRD 6.3 Bite Roulette Random Dish Generator
+    Returns 6 curated dishes with colors and emojis for the lucky wheel.
     """
     return {
         "status": "success",
         "items": [
             {
                 "id": "r1",
-                "label": "Soto Hangat",
-                "label_en": "Warm Soto Soup",
+                "label": "Soto Kudus Daging",
+                "label_en": "Kudus Beef Soup",
                 "emoji": "🍲",
-                "mood_benefit": "Menenangkan pikiran lelah & hangatkan badan",
-                "mood_benefit_en": "Calms tired minds & warms the body",
-                "color_hex": "#DC2626",
-                "search_keyword": "soto ayam soto daging",
+                "mood_benefit": "Kuah kaldu bening penenang stres & lelah",
+                "mood_benefit_en": "Clear broth comfort to ease stress and fatigue",
+                "color_hex": "#EF4444",
+                "search_keyword": "soto kudus daging sapi",
             },
             {
                 "id": "r2",
-                "label": "Bakso Mercon",
-                "label_en": "Spicy Meatball",
-                "emoji": "🌶️",
-                "mood_benefit": "Pelepas stres & pemicu adrenalin semangat",
-                "mood_benefit_en": "Stress reliever & energizing spice kick",
-                "color_hex": "#EA580C",
-                "search_keyword": "bakso mercon pedas",
+                "label": "Ayam Geprek Mercon",
+                "label_en": "Spicy Smashed Chicken",
+                "emoji": "🍗",
+                "mood_benefit": "Pedas membakar pemompa adrenalin & fokus",
+                "mood_benefit_en": "Spicy punch to boost adrenaline and alertness",
+                "color_hex": "#F97316",
+                "search_keyword": "ayam geprek cabe rawit",
             },
             {
                 "id": "r3",
-                "label": "Nasi Gila",
-                "label_en": "Crazy Rice Bowl",
-                "emoji": "🍳",
-                "mood_benefit": "Kenikmatan gurih cepat saji pengusir lapar",
-                "mood_benefit_en": "Savory street stir-fry to beat hunger fast",
-                "color_hex": "#CA8A04",
-                "search_keyword": "nasi gila spesial",
+                "label": "Bubur Ayam Sukabumi",
+                "label_en": "Savory Chicken Porridge",
+                "emoji": "🥣",
+                "mood_benefit": "Tekstur lembut ramah lambung pemulih energi",
+                "mood_benefit_en": "Soft texture gentle on stomach for easy recharge",
+                "color_hex": "#F59E0B",
+                "search_keyword": "bubur ayam sukabumi",
             },
             {
                 "id": "r4",
-                "label": "Kopi & Toast",
-                "label_en": "Coffee & Toast",
+                "label": "Kopi Susu & Toast",
+                "label_en": "Iced Coffee & Toast",
                 "emoji": "☕",
-                "mood_benefit": "Dopamine booster penambah fokus kerja",
-                "mood_benefit_en": "Dopamine booster to enhance focus",
-                "color_hex": "#059669",
+                "mood_benefit": "Dopamin kafein & karbohidrat pengusir suntuk",
+                "mood_benefit_en": "Caffeine and carbs boost to beat the afternoon slump",
+                "color_hex": "#10B981",
                 "search_keyword": "kopi susu aren toast",
             },
             {
@@ -528,20 +726,34 @@ def get_roulette_items():
 async def analyze_image(payload: AnalyzeImageRequest):
     """
     Multimodal image analysis via Gemini 2.5 Flash.
-    Accepts base64 encoded photo and returns natural mood/food craving text.
+    Strictly in-memory: raw image bytes exist ONLY in RAM, EXIF GPS / device tags
+    are stripped before inference, and buffers are immediately dropped.
+    Zero disk storage guaranteed (Complies with UU PDP No. 27/2022).
     """
     try:
         b64_str = payload.image_base64
         if "," in b64_str:
             b64_str = b64_str.split(",", 1)[1]
-        img_bytes = base64.b64decode(b64_str)
-        result = await agent.analyze_image_sentiment(
-            image_bytes=img_bytes,
+        raw_bytes = base64.b64decode(b64_str)
+
+        # 1. In-memory EXIF metadata stripping (cleans GPS coordinates, camera maker, timestamps)
+        clean_bytes, clean_mime = sanitize_image_buffer(
+            raw_bytes=raw_bytes,
             mime_type=payload.mime_type or "image/jpeg",
+        )
+        del raw_bytes  # Immediately discard raw buffer
+
+        # 2. In-memory Gemini multimodal inference
+        result = await agent.analyze_image_sentiment(
+            image_bytes=clean_bytes,
+            mime_type=clean_mime,
             lang=payload.lang or "id",
         )
+        del clean_bytes  # Immediately discard cleaned buffer
+
         return result
     except Exception as e:
+        logger.error(f"Image analysis error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Gagal memproses gambar: {str(e)}",
@@ -589,8 +801,6 @@ def get_active_banners(city: Optional[str] = Query(None)):
     except Exception:
         pass
 
-
-
     return {
         "status": "success",
         "count": len(banners),
@@ -616,8 +826,12 @@ def get_default_menus():
                     ORDER BY display_order ASC;
                     """
                 )
+                seen_names = set()
                 for row in cur.fetchall():
                     m_id, name, cat, img, price, desc, order = row
+                    if name in seen_names:
+                        continue
+                    seen_names.add(name)
                     menus.append({
                         "id": str(m_id),
                         "food_name": name,

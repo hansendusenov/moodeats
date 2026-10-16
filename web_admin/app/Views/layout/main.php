@@ -4,6 +4,8 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title><?= esc($title ?? 'MoodEats Admin Console') ?> - MoodEats Console</title>
+    <link rel="icon" type="image/png" href="/assets/images/moodeats_mascot.png"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -44,9 +46,7 @@
         <!-- Brand & Node Status -->
         <div class="px-2 pt-1 pb-3 border-b border-red-50">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-sm shadow-red-200">
-                    <span class="material-symbols-outlined text-[20px]">restaurant_menu</span>
-                </div>
+                <img src="/assets/images/moodeats_mascot.png" class="w-9 h-9 object-contain drop-shadow-sm" alt="MoodEats Mascot" />
                 <div>
                     <span class="text-lg font-extrabold tracking-tight text-red-600 leading-tight block">MoodEats</span>
                     <span class="text-[10px] font-mono text-slate-400 block tracking-wider uppercase">Hyperlocal AI Console</span>
@@ -89,6 +89,10 @@
             <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'analytics' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/analytics">
                 <span class="material-symbols-outlined text-[18px]">psychology</span>
                 <span class="text-sm">Logs &amp; AI Sessions</span>
+            </a>
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'audit_logs' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/audit-logs">
+                <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                <span class="text-sm">Audit &amp; UU PDP Logs</span>
             </a>
         </nav>
     </div>

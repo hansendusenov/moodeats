@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
+import 'presentation/screens/landing/web_landing_screen.dart';
 import 'presentation/screens/splash/splash_screen.dart';
 
 void main() async {
@@ -39,10 +41,12 @@ class MoodEatsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MoodEats',
+      title: 'MoodEats - Autonomous Emotion & Hyperlocal Commerce',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      // On Web: launch directly into the Web Landing Page (no mobile splashscreen)
+      // On Mobile: launch into the animated SplashScreen
+      home: kIsWeb ? const WebLandingScreen() : const SplashScreen(),
     );
   }
 }

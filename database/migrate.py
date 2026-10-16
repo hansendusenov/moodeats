@@ -36,6 +36,7 @@ SQL_FILES = [
     "009_user_vouchers.sql",
     "010_ad_metrics.sql",
     "011_admin_users.sql",
+    "012_pdp_compliance_and_audit.sql",
     "seed_default_menus.sql",
     "seed_admin_users.sql",
 ]
@@ -59,7 +60,7 @@ def run_migrations():
             print(f"[SKIP] {sql_file} - File not found")
             continue
 
-        sql_content = file_path.read_text(encoding="utf-8")
+        sql_content = file_path.read_text(encoding="utf-8-sig")
         try:
             cursor.execute(sql_content)
             print(f"[OK]   {sql_file}")

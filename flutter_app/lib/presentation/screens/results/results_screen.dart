@@ -45,6 +45,8 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final voucherState = ref.watch(activeVoucherProvider);
     final lang = ref.watch(appLanguageProvider);
     final tr = AppStrings.of(lang);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -61,11 +63,17 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: isDesktop ? 1000 : double.infinity),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 32.0 : 16.0,
+              vertical: isDesktop ? 24.0 : 16.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             // Offline Mode Notice (if served from cache or offline)
             if (widget.response.status == 'offline_mode' || widget.response.status == 'success_cached') ...[
               Container(
@@ -382,7 +390,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ),
+  );
   }
 
   Widget _buildPlaceCard(

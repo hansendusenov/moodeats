@@ -26,6 +26,10 @@ class DeviceInfoService {
     if (_cachedTelemetry != null) {
       return _cachedTelemetry!;
     }
+    if (kIsWeb) {
+      _cachedTelemetry = const DeviceTelemetry(model: 'Web Browser', os: 'Web Application', appVersion: appVersion);
+      return _cachedTelemetry!;
+    }
 
     String model = 'Unknown Device';
     String os = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';

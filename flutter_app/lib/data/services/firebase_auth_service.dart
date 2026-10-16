@@ -1,8 +1,10 @@
-﻿import 'dart:convert';
+import 'auth/google_auth_helper.dart';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app_cache_service.dart';
 import 'package:http/http.dart' as http;
 
 class UserModel {
@@ -97,26 +99,34 @@ class FirebaseAuthService {
   bool get isLoggedIn => _currentUser != null && _currentUser!.idToken.isNotEmpty;
 
   static String? _baseDirPath;
+  static final Map<String, dynamic> _webProfilesDb = {};
 
   static String get _getStorageDir {
+    if (kIsWeb) return '';
     if (_baseDirPath != null) return _baseDirPath!;
-    if (Platform.isAndroid) {
-      final candidates = [
-        '/data/user/0/com.moodeats.moodeats_app/app_flutter',
-        '/data/user/0/com.moodeats.moodeats_app/files',
-        '/data/data/com.moodeats.moodeats_app/app_flutter',
-        '/data/data/com.moodeats.moodeats_app/files',
-      ];
-      for (final p in candidates) {
-        final d = Directory(p);
-        if (d.existsSync()) {
-          _baseDirPath = p;
-          return p;
+    try {
+      if (Platform.isAndroid) {
+        final candidates = [
+          '/data/user/0/com.moodeats.moodeats_app/app_flutter',
+          '/data/user/0/com.moodeats.moodeats_app/files',
+          '/data/data/com.moodeats.moodeats_app/app_flutter',
+          '/data/data/com.moodeats.moodeats_app/files',
+        ];
+        for (final p in candidates) {
+          final d = Directory(p);
+          if (d.existsSync()) {
+            _baseDirPath = p;
+            return p;
+          }
         }
       }
+    } catch (_) {}
+    try {
+      _baseDirPath = Directory.systemTemp.path;
+      return _baseDirPath!;
+    } catch (_) {
+      return '';
     }
-    _baseDirPath = Directory.systemTemp.path;
-    return _baseDirPath!;
   }
 
   String get _sessionFilePath =>
@@ -125,6 +135,9 @@ class FirebaseAuthService {
       '$_getStorageDir/moodeats_users_profiles.json';
 
   Map<String, dynamic> _loadProfilesDb() {
+    if (kIsWeb) {
+      return Map<String, dynamic>.from(_webProfilesDb);
+    }
     try {
       final file = File(_profilesDbFilePath);
       if (file.existsSync()) {
@@ -140,8 +153,12 @@ class FirebaseAuthService {
   }
 
   void _saveProfileToDb(String email, Map<String, dynamic> data) {
+    final clean = email.trim().toLowerCase();
+    if (kIsWeb) {
+      _webProfilesDb[clean] = data;
+      return;
+    }
     try {
-      final clean = email.trim().toLowerCase();
       final profiles = _loadProfilesDb();
       profiles[clean] = data;
       final file = File(_profilesDbFilePath);
@@ -153,6 +170,21 @@ class FirebaseAuthService {
   }
 
   void _loadSavedSession() {
+    if (kIsWeb) {
+      if (_currentUser == null) {
+        try {
+          final savedStr = GoogleAuthPlatformHelper.getWebSavedSession();
+          if (savedStr.isNotEmpty) {
+            final data = jsonDecode(savedStr) as Map<String, dynamic>;
+            _currentUser = UserModel.fromJson(data);
+            debugPrint('Web: Loaded persistent session for ${_currentUser?.email}');
+          }
+        } catch (e) {
+          debugPrint('Web: Error loading saved session: $e');
+        }
+      }
+      return;
+    }
     try {
       final file = File(_sessionFilePath);
       if (file.existsSync()) {
@@ -193,6 +225,12 @@ class FirebaseAuthService {
 
   void _persistSession(UserModel user) {
     _currentUser = user;
+    if (kIsWeb) {
+      try {
+        GoogleAuthPlatformHelper.saveWebSession(jsonEncode(user.toJson()));
+      } catch (_) {}
+      return;
+    }
     try {
       final file = File(_sessionFilePath);
       file.writeAsStringSync(jsonEncode(user.toJson()));
@@ -204,6 +242,12 @@ class FirebaseAuthService {
 
   void _clearSession() {
     _currentUser = null;
+    if (kIsWeb) {
+      try {
+        GoogleAuthPlatformHelper.clearWebSession();
+      } catch (_) {}
+      return;
+    }
     try {
       final file = File(_sessionFilePath);
       if (file.existsSync()) {
@@ -678,9 +722,54 @@ class FirebaseAuthService {
     }
   }
 
-  /// Sign Out
+  /// Process Google Web Sign-In result from JS popup
+  Future<UserModel> signInWithWebPopupResult({
+    required String idToken,
+    required String email,
+    required String displayName,
+    required String localId,
+    String? photoUrl,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final name = displayName.trim().isNotEmpty
+        ? displayName.trim()
+        : (cleanEmail.isNotEmpty ? cleanEmail.split('@').first : 'Pengguna Google');
+
+    final profiles = _loadProfilesDb();
+    final savedProfile = profiles[cleanEmail] as Map<String, dynamic>?;
+
+    final birthDate = savedProfile?['birthDate'] as String? ?? '';
+    final gender = savedProfile?['gender'] as String? ?? '';
+    final finalName = (savedProfile?['displayName'] as String?)?.isNotEmpty == true
+        ? savedProfile!['displayName'] as String
+        : name;
+
+    final user = UserModel(
+      id: localId.isNotEmpty ? localId : 'google_$cleanEmail',
+      email: cleanEmail,
+      displayName: finalName,
+      birthDate: birthDate,
+      gender: gender,
+      idToken: idToken,
+      refreshToken: 'refresh_$cleanEmail',
+      authProvider: 'google',
+    );
+
+    final updatedData = {
+      'displayName': finalName,
+      'birthDate': birthDate,
+      'gender': gender,
+      'lastLogin': DateTime.now().toIso8601String(),
+    };
+    _saveProfileToDb(cleanEmail, updatedData);
+    _persistSession(user);
+    return user;
+  }
+
+  /// Sign Out (Smart Cache Sanitation: purge local offline cache files & RAM)
   Future<void> signOut() async {
     _clearSession();
+    AppCacheService.purgeAllCache();
   }
 
   String _translateFirebaseError(String code) {
@@ -709,6 +798,10 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   final FirebaseAuthService _service;
 
   AuthNotifier(this._service) : super(_service.currentUser);
+
+  void setLoggedInUser(UserModel user) {
+    state = user;
+  }
 
   Future<UserModel> signUp({
     required String email,

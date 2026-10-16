@@ -29,6 +29,13 @@ class UserProfileModel extends Model
         'device_os',
         'app_version',
         'last_active_at',
+        'status',
+        'deletion_requested_at',
+        'grace_period_ends_at',
+        'anonymized_at',
+        'ban_reason',
+        'email_hash',
+        'device_telemetry_signature',
         'created_at',
         'updated_at',
     ];

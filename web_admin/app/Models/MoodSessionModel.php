@@ -23,6 +23,8 @@ class MoodSessionModel extends Model
         'location_lng',
         'city_detected',
         'ai_response_payload',
+        'extracted_intent',
+        'is_unlinked',
         'created_at',
     ];
 

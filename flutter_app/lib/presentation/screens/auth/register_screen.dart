@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:moodeats_app/data/services/auth/google_auth_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodeats_app/core/constants/app_colors.dart';
@@ -111,6 +113,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleGoogleSignIn(AppStrings tr) async {
     setState(() => _isLoading = true);
     try {
+      if (kIsWeb) {
+        final res = await GoogleAuthPlatformHelper.signInWithPopup();
+        if (res['success'] == true) {
+          final idToken = res['idToken'] as String? ?? '';
+          final email = res['email'] as String? ?? '';
+          final displayName = res['displayName'] as String? ?? '';
+          final localId = res['localId'] as String? ?? '';
+
+          final user = await ref.read(firebaseAuthServiceProvider).signInWithWebPopupResult(
+                idToken: idToken,
+                email: email,
+                displayName: displayName,
+                localId: localId,
+              );
+          ref.read(authUserProvider.notifier).setLoggedInUser(user);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(tr.registerCompleteProfileLater),
+                backgroundColor: AppColors.happyGreen,
+              ),
+            );
+            ref.read(mainTabProvider.notifier).state = 0;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+              (route) => false,
+            );
+          }
+          return;
+        } else {
+          final errorMsg = (res['errorMessage'] ?? '').toString();
+          if (!errorMsg.contains('popup-closed-by-user') && !errorMsg.contains('cancelled')) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(errorMsg.isNotEmpty ? errorMsg : 'Login Google dibatalkan.'),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+            }
+          }
+          return;
+        }
+      }
+
       final result = await Navigator.of(context).push<AuthResult>(
         MaterialPageRoute(
           builder: (_) => const GoogleOAuthScreen(),
@@ -175,15 +223,240 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     final tr = AppStrings.of(lang);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 850;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      backgroundColor: Colors.white,
+      body: isDesktop
+          ? _buildSplitScreen(context, tr, lang)
+          : _buildMobileLayout(context, tr, lang),
+    );
+  }
+
+  /// Desktop / Web 2-Column Split Layout
+  Widget _buildSplitScreen(BuildContext context, AppStrings tr, AppLanguage lang) {
+    return Row(
+      children: [
+        // LEFT COLUMN: Brand Banner & Showcase
+        Expanded(
+          flex: 5,
+          child: Container(
+            height: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 48),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFDC2626), // Brand Red
+                  Color(0xFF991B1B), // Deep Crimson
+                ],
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Back to Web Home Button
+                InkWell(
+                  onTap: () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      ref.read(mainTabProvider.notifier).state = 0;
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          tr.isId ? 'Kembali' : 'Back',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Brand Emblem
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset('assets/images/moodeats_mascot.png', width: 36, height: 36, fit: BoxFit.contain),
+                    ),
+                    const SizedBox(width: 14),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'MoodEats',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        Text(
+                          'Autonomous Sentiment Commerce',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+
+                Text(
+                  tr.isId
+                      ? 'Daftar & Rasakan Revolusi Makan Sesuai Suasana Hatimu'
+                      : 'Join & Experience Food Curated to Your Mood',
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  tr.isId
+                      ? 'Dapatkan voucher diskon langsung, rekomendasi kuliner berbasis AI Gemini 2.5, dan perlindungan privasi data tingkat tinggi (UU PDP No. 27/2022).'
+                      : 'Enjoy instant discount vouchers, Gemini 2.5 AI culinary matching, and enterprise-grade privacy protection.',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                    height: 1.5,
+                  ),
+                ),
+
+                const SizedBox(height: 36),
+
+                // Highlights Pill Badges
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: [
+                    _buildRegisterBadge('🎯', tr.isId ? 'Rekomendasi Presisi' : 'Accurate Picks'),
+                    _buildRegisterBadge('🎟️', tr.isId ? 'Voucher 15 Menit' : '15-Min Vouchers'),
+                    _buildRegisterBadge('🔒', tr.isId ? 'Kepatuhan UU PDP' : 'PDP Compliant'),
+                  ],
+                ),
+
+                const Spacer(),
+
+                // Bottom Footer Note
+                Text(
+                  tr.isId
+                      ? '© 2026 MoodEats Inc. Hak Cipta Dilindungi.'
+                      : '© 2026 MoodEats Inc. All rights reserved.',
+                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // RIGHT COLUMN: Form Area
+        Expanded(
+          flex: 6,
+          child: Container(
+            color: Colors.white,
+            height: double.infinity,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 32),
+                  child: _buildFormContent(context, tr, lang, isDesktop: true),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRegisterBadge(String emoji, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Mobile Layout
+  Widget _buildMobileLayout(BuildContext context, AppStrings tr, AppLanguage lang) {
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: _buildFormContent(context, tr, lang, isDesktop: false),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormContent(BuildContext context, AppStrings tr, AppLanguage lang, {required bool isDesktop}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
               // Top Bar with Back Button & Language Switcher
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -242,8 +515,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.borderRed),
                   ),
-                  child: const Center(
-                    child: Text('🍲', style: TextStyle(fontSize: 34)),
+                  child: Center(
+                    child: Image.asset('assets/images/moodeats_mascot.png', width: 44, height: 44, fit: BoxFit.contain),
                   ),
                 ),
               ),
@@ -530,10 +803,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

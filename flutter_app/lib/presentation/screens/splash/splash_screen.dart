@@ -109,10 +109,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Text(
-                        '🍲',
-                        style: TextStyle(fontSize: 54),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/moodeats_mascot.png',
+                        width: 76,
+                        height: 76,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

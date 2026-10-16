@@ -49,6 +49,11 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // Analytics & Live Sessions
     $routes->get('analytics', 'Analytics::index');
 
+    // Security Audit Logs & UU PDP Retention (TTL)
+    $routes->get('audit-logs', 'AuditLogs::index');
+    $routes->get('audit-logs/purge-ttl', 'AuditLogs::purgeTtl');
+    $routes->post('audit-logs/purge-ttl', 'AuditLogs::purgeTtl');
+
     // User Management, Ban & Voucher Injection
     $routes->get('users', 'Users::index');
     $routes->post('users/toggle-ban/(:segment)', 'Users::toggleBan/$1');
@@ -56,5 +61,6 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('users/inject-voucher', 'Users::injectVoucher');
     $routes->get('users/vouchers/(:segment)', 'Users::userVouchers/$1');
     $routes->get('users/revoke-voucher/(:segment)', 'Users::revokeVoucher/$1');
+    $routes->get('users/crypto-shred/(:segment)', 'Users::cryptoShred/$1');
     $routes->get('users/delete/(:segment)', 'Users::delete/$1');
 });

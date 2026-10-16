@@ -13,9 +13,13 @@ class ApiService {
   late final String baseUrl;
 
   ApiService() {
-    final configuredUrl = dotenv.env['ADK_AGENT_BASE_URL'] ??
+    String configuredUrl = dotenv.env['ADK_AGENT_BASE_URL'] ??
         dotenv.env['AGENT_API_URL'] ??
-        'http://192.168.100.114:8080';
+        'http://localhost:8080';
+    if (kIsWeb) {
+      // In local browser, connect directly to localhost:8080
+      configuredUrl = 'http://localhost:8080';
+    }
     baseUrl = configuredUrl.endsWith('/')
         ? configuredUrl.substring(0, configuredUrl.length - 1)
         : configuredUrl;
@@ -60,7 +64,7 @@ class ApiService {
             headers: {'Content-Type': 'application/json'},
             body: body,
           )
-          .timeout(const Duration(seconds: 12));
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -97,7 +101,7 @@ class ApiService {
           headers: {'Content-Type': 'application/json'},
           body: body,
         )
-        .timeout(const Duration(seconds: 15));
+        .timeout(const Duration(seconds: 25));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
@@ -113,7 +117,7 @@ class ApiService {
       final uri = Uri.parse('$baseUrl/api/v1/banners').replace(
         queryParameters: city != null ? {'city': city} : null,
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -133,7 +137,7 @@ class ApiService {
   Future<List<MenuModel>> getDefaultMenus() async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/menus/default');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      final response = await http.get(url).timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -153,7 +157,7 @@ class ApiService {
   Future<List<RouletteItemModel>> getRouletteItems() async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/roulette');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      final response = await http.get(url).timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -199,6 +203,59 @@ class ApiService {
     }
   }
 
+  /// DELETE /api/v1/sessions/history (Subject Rights: Unlink Sessions & Purge Local Cache)
+  Future<bool> clearHistory(String userId) async {
+    try {
+      final url = Uri.parse('$baseUrl/api/v1/sessions/history?user_id=$userId');
+      final response = await http.delete(url).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        AppCacheService.purgeHistory(userId);
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error ApiService.clearHistory: $e');
+    }
+    // Purge local cache regardless of offline status
+    AppCacheService.purgeHistory(userId);
+    return false;
+  }
+
+  /// POST /api/v1/users/delete-request (Subject Rights: Right to Erasure / 30-Day Grace Period)
+  Future<Map<String, dynamic>> requestAccountDeletion(String userId) async {
+    final url = Uri.parse('$baseUrl/api/v1/users/delete-request');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_id': userId}),
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      AppCacheService.purgeAllCache();
+      return data;
+    } else {
+      final err = jsonDecode(response.body);
+      throw Exception(err['detail'] ?? 'Gagal mengajukan penghapusan akun');
+    }
+  }
+
+  /// POST /api/v1/users/cancel-delete (Subject Rights: Restore Account During Grace Period)
+  Future<Map<String, dynamic>> cancelAccountDeletion(String userId) async {
+    final url = Uri.parse('$baseUrl/api/v1/users/cancel-delete');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_id': userId}),
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      final err = jsonDecode(response.body);
+      throw Exception(err['detail'] ?? 'Gagal membatalkan penghapusan akun');
+    }
+  }
+
   /// GET /api/v1/sessions/history with date range and lazy pagination
   Future<HistoryFetchResult> getHistorySessionsPage({
     String? userId,
@@ -219,7 +276,7 @@ class ApiService {
       final uri = Uri.parse('$baseUrl/api/v1/sessions/history').replace(
         queryParameters: queryParams,
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 20));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final list = data['history'] as List<dynamic>? ?? [];
@@ -303,7 +360,7 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getMyVouchers(String userId) async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/vouchers/my?user_id=$userId');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      final response = await http.get(url).timeout(const Duration(seconds: 20));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final list = data['vouchers'] as List<dynamic>? ?? [];

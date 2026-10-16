@@ -155,48 +155,57 @@ class _BiteRouletteScreenState extends ConsumerState<BiteRouletteScreen>
     final rouletteAsync = ref.watch(rouletteItemsProvider);
     final lang = ref.watch(appLanguageProvider);
     final tr = AppStrings.of(lang);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          '${tr.navRoulette} 🎲',
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            color: AppColors.textPrimary,
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: Text(
+                '${tr.navRoulette} 🎲',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0.5,
+              automaticallyImplyLeading: false,
+            ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: isDesktop ? 680 : double.infinity),
+          child: rouletteAsync.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+            error: (err, _) {
+              final cached = AppCacheService.getCachedRouletteItems();
+              if (cached.isNotEmpty) {
+                return _buildRouletteContent(cached, tr, isDesktop);
+              }
+              return Center(
+                child: Text(tr.isId ? 'Gagal memuat roulette: $err' : 'Failed to load roulette: $err'),
+              );
+            },
+            data: (items) {
+              final effectiveItems = items.isNotEmpty ? items : AppCacheService.getCachedRouletteItems();
+              if (effectiveItems.isEmpty) {
+                return Center(child: Text(tr.isId ? 'Daftar roulette kosong' : 'Roulette list is empty'));
+              }
+              return _buildRouletteContent(effectiveItems, tr, isDesktop);
+            },
           ),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0.5,
-        automaticallyImplyLeading: false,
-      ),
-      body: rouletteAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-        error: (err, _) {
-          final cached = AppCacheService.getCachedRouletteItems();
-          if (cached.isNotEmpty) {
-            return _buildRouletteContent(cached, tr);
-          }
-          return Center(
-            child: Text(tr.isId ? 'Gagal memuat roulette: $err' : 'Failed to load roulette: $err'),
-          );
-        },
-        data: (items) {
-          final effectiveItems = items.isNotEmpty ? items : AppCacheService.getCachedRouletteItems();
-          if (effectiveItems.isEmpty) {
-            return Center(child: Text(tr.isId ? 'Daftar roulette kosong' : 'Roulette list is empty'));
-          }
-          return _buildRouletteContent(effectiveItems, tr);
-        },
       ),
     );
   }
 
-  Widget _buildRouletteContent(List<RouletteItemModel> items, AppStrings tr) {
+  Widget _buildRouletteContent(List<RouletteItemModel> items, AppStrings tr, [bool isDesktop = false]) {
     return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Column(

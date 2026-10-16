@@ -12,6 +12,7 @@ class AppCacheService {
   static final Map<String, dynamic> _memoryCache = {};
 
   static String get _storageDir {
+    if (kIsWeb) return '';
     if (_baseDirPath != null) return _baseDirPath!;
     if (Platform.isAndroid) {
       final candidates = [
@@ -45,6 +46,7 @@ class AppCacheService {
 
   static void saveJson(String key, dynamic data) {
     _memoryCache[key] = data;
+    if (kIsWeb) return;
     try {
       final file = _getCacheFile(key);
       if (!file.parent.existsSync()) {
@@ -60,6 +62,7 @@ class AppCacheService {
     if (_memoryCache.containsKey(key)) {
       return _memoryCache[key];
     }
+    if (kIsWeb) return null;
     try {
       final file = _getCacheFile(key);
       if (file.existsSync()) {
@@ -74,6 +77,81 @@ class AppCacheService {
       debugPrint('AppCacheService.loadJson failed for $key: $e');
     }
     return null;
+  }
+
+  // --- Smart Offline Cache Sanitation (UU PDP No. 27/2022) ---
+
+  /// Completely purges all offline cache files from device disk and wipes in-memory cache.
+  /// Called upon logout, account deletion, or explicit cache wipe.
+  static int purgeAllCache() {
+    _memoryCache.clear();
+    int purgedCount = 0;
+    try {
+      final dir = Directory(_storageDir);
+      if (dir.existsSync()) {
+        final entries = dir.listSync();
+        for (final entry in entries) {
+          if (entry is File) {
+            final fileName = entry.uri.pathSegments.last;
+            if (fileName.startsWith('moodeats_cache_') && fileName.endsWith('.json')) {
+              try {
+                entry.deleteSync();
+                purgedCount++;
+              } catch (e) {
+                debugPrint('AppCacheService: Failed deleting $fileName: $e');
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('AppCacheService.purgeAllCache error: $e');
+    }
+    debugPrint('AppCacheService: Purged $purgedCount cache files from disk & cleared memory cache.');
+    return purgedCount;
+  }
+
+  /// Purges cached search history for a user from both RAM and disk
+  static void purgeHistory([String? userId]) {
+    final key = 'history_${userId ?? "guest"}';
+    _memoryCache.remove(key);
+    try {
+      final file = _getCacheFile(key);
+      if (file.existsSync()) {
+        file.deleteSync();
+        debugPrint('AppCacheService: Purged local history cache file for ${userId ?? "guest"}');
+      }
+    } catch (e) {
+      debugPrint('AppCacheService.purgeHistory error: $e');
+    }
+  }
+
+  /// Returns statistics about cached files on disk (file count and total bytes)
+  static Map<String, dynamic> getCacheStats() {
+    int fileCount = 0;
+    int totalBytes = 0;
+    try {
+      final dir = Directory(_storageDir);
+      if (dir.existsSync()) {
+        final entries = dir.listSync();
+        for (final entry in entries) {
+          if (entry is File) {
+            final fileName = entry.uri.pathSegments.last;
+            if (fileName.startsWith('moodeats_cache_') && fileName.endsWith('.json')) {
+              fileCount++;
+              totalBytes += entry.lengthSync();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('AppCacheService.getCacheStats error: $e');
+    }
+    return {
+      'file_count': fileCount,
+      'total_bytes': totalBytes,
+      'in_memory_keys': _memoryCache.length,
+    };
   }
 
   // --- Banners Cache ---

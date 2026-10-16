@@ -14,6 +14,7 @@ import 'package:moodeats_app/presentation/widgets/dietary_preferences_modal.dart
 import 'package:moodeats_app/presentation/widgets/bouncy_tap.dart';
 import 'package:moodeats_app/data/services/preferences_service.dart';
 import 'package:moodeats_app/data/services/device_info_service.dart';
+import 'package:moodeats_app/data/services/app_cache_service.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -106,6 +107,126 @@ class AccountScreen extends ConsumerWidget {
     }
   }
 
+  void _handleClearCache(BuildContext context, AppLanguage lang) {
+    final count = AppCacheService.purgeAllCache();
+    final isId = lang == AppLanguage.id;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isId
+              ? 'Cache offline berhasil dibersihkan ($count file dihapus)!'
+              : 'Offline cache purged successfully ($count files deleted)!',
+        ),
+        backgroundColor: AppColors.happyGreen,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteAccount(
+    BuildContext context,
+    WidgetRef ref,
+    UserModel user,
+    AppLanguage lang,
+  ) async {
+    final isId = lang == AppLanguage.id;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 26),
+            const SizedBox(width: 8),
+            Text(
+              isId ? 'Permohonan Hapus Akun' : 'Request Account Deletion',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isId
+                  ? 'Sesuai UU Pelindungan Data Pribadi (UU PDP No. 27/2022 Pasal 43 Hak Penghapusan):'
+                  : 'In compliance with Data Protection Law (UU PDP No. 27/2022 Article 43):',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isId
+                  ? '''- Masa Tenggang 30 Hari: Akun Anda akan dinonaktifkan sementara. Anda dapat membatalkan permohonan ini kapan saja dalam 30 hari dengan login kembali.\n\n- Crypto-Shredding Permanen: Setelah 30 hari, seluruh data pribadi (nama, surel, telepon, profil) akan di-crypto-shred dan sesi analitik di-unlink permanen.\n\n- Cache Lokal: Seluruh file cache offline pada perangkat ini akan langsung dihapus.'''
+                  : '''- 30-Day Grace Period: Your account will be temporarily deactivated. You can cancel this request anytime within 30 days by signing in again.\n\n- Permanent Crypto-Shredding: After 30 days, all personal identifiers will be permanently crypto-shredded and analytics unlinked.\n\n- Local Cache: All offline cache files on this device will be immediately wiped.''',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              isId ? 'Batal' : 'Cancel',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              isId ? 'Ajukan Penghapusan' : 'Submit Deletion',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final api = ref.read(apiServiceProvider);
+        await api.requestAccountDeletion(user.id);
+        ref.read(mainTabProvider.notifier).state = 0;
+        await ref.read(authUserProvider.notifier).signOut();
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isId
+                    ? 'Permohonan penghapusan akun dicatat. Masa tenggang aktif selama 30 hari.'
+                    : 'Account deletion requested. 30-day grace period is now active.',
+              ),
+              backgroundColor: Colors.amber.shade800,
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _handleLogout(BuildContext context, WidgetRef ref, AppStrings tr) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
@@ -159,28 +280,55 @@ class AccountScreen extends ConsumerWidget {
     final birthDate = user?.birthDate.isNotEmpty == true ? user!.birthDate : '-';
     final gender = tr.formatGender(user?.gender);
     final isProfileComplete = user?.isProfileComplete ?? false;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          tr.accountTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        automaticallyImplyLeading: false,
-      ),
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: Text(
+                tr.accountTitle,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0.5,
+              automaticallyImplyLeading: false,
+            ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 960 : double.infinity),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 32.0 : 20.0,
+                vertical: isDesktop ? 28.0 : 20.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isDesktop) ...[
+                    Row(
+                      children: [
+                        const Text('👤', style: TextStyle(fontSize: 24)),
+                        const SizedBox(width: 10),
+                        Text(
+                          tr.accountTitle,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
               // User Profile Card
               Container(
                 width: double.infinity,
@@ -579,6 +727,54 @@ class AccountScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 28),
 
+              // Privasi Data & Penyimpanan Offline (UU PDP No. 27/2022)
+              Text(
+                lang == AppLanguage.id ? 'Privasi Data & Penyimpanan (UU PDP)' : 'Data Privacy & Storage (PDP Law)',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Bersihkan Cache Card
+              _buildSettingCard(
+                icon: Icons.cleaning_services_rounded,
+                title: lang == AppLanguage.id ? 'Bersihkan Cache Offline' : 'Clear Offline Cache',
+                subtitle: lang == AppLanguage.id
+                    ? 'Hapus file cache JSON offline pada penyimpanan perangkat'
+                    : 'Purge local offline JSON cache files from device storage',
+                trailing: TextButton(
+                  onPressed: () => _handleClearCache(context, lang),
+                  child: Text(
+                    lang == AppLanguage.id ? 'Bersihkan' : 'Purge',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                  ),
+                ),
+                onTap: () => _handleClearCache(context, lang),
+              ),
+              const SizedBox(height: 10),
+
+              // Hak Penghapusan Akun (Right to Erasure)
+              if (user != null)
+                _buildSettingCard(
+                  icon: Icons.person_remove_outlined,
+                  title: lang == AppLanguage.id ? 'Permohonan Hapus Akun' : 'Request Account Deletion',
+                  subtitle: lang == AppLanguage.id
+                      ? 'Masa tenggang 30 hari & crypto-shredding (UU PDP Pasal 43)'
+                      : '30-day grace period & crypto-shredding (PDP Article 43)',
+                  trailing: TextButton(
+                    onPressed: () => _handleDeleteAccount(context, ref, user, lang),
+                    child: Text(
+                      lang == AppLanguage.id ? 'Ajukan' : 'Request',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
+                  ),
+                  onTap: () => _handleDeleteAccount(context, ref, user, lang),
+                ),
+              if (user != null) const SizedBox(height: 24),
+
               // Logout Button
               BouncyTap(
                 scaleFactor: 0.96,
@@ -608,7 +804,9 @@ class AccountScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ),
+  ),
+  );
   }
 
   Widget _buildSettingCard({
