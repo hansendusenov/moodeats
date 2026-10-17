@@ -10,13 +10,16 @@ import '../models/history_session_model.dart';
 import 'app_cache_service.dart';
 
 class ApiService {
+  static const String defaultBackendUrl =
+      'https://moodeats-backend-498524940371.asia-southeast2.run.app';
+
   late final String baseUrl;
 
   ApiService() {
     final envUrl = dotenv.env['ADK_AGENT_BASE_URL'] ?? dotenv.env['AGENT_API_URL'];
     String configuredUrl = (envUrl != null && envUrl.isNotEmpty)
         ? envUrl
-        : (kIsWeb ? 'http://localhost:8080' : 'http://10.0.2.2:8080');
+        : defaultBackendUrl;
 
     baseUrl = configuredUrl.endsWith('/')
         ? configuredUrl.substring(0, configuredUrl.length - 1)
@@ -62,7 +65,7 @@ class ApiService {
             headers: {'Content-Type': 'application/json'},
             body: body,
           )
-          .timeout(const Duration(seconds: 45));
+          .timeout(const Duration(minutes: 5));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -99,7 +102,7 @@ class ApiService {
           headers: {'Content-Type': 'application/json'},
           body: body,
         )
-        .timeout(const Duration(seconds: 25));
+        .timeout(const Duration(seconds: 60));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
@@ -115,7 +118,7 @@ class ApiService {
       final uri = Uri.parse('$baseUrl/api/v1/banners').replace(
         queryParameters: city != null ? {'city': city} : null,
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 20));
+      final response = await http.get(uri).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -135,7 +138,7 @@ class ApiService {
   Future<List<MenuModel>> getDefaultMenus() async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/menus/default');
-      final response = await http.get(url).timeout(const Duration(seconds: 20));
+      final response = await http.get(url).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -155,7 +158,7 @@ class ApiService {
   Future<List<RouletteItemModel>> getRouletteItems() async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/roulette');
-      final response = await http.get(url).timeout(const Duration(seconds: 20));
+      final response = await http.get(url).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -191,7 +194,7 @@ class ApiService {
           headers: {'Content-Type': 'application/json'},
           body: body,
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(minutes: 5));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -205,7 +208,7 @@ class ApiService {
   Future<bool> clearHistory(String userId) async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/sessions/history?user_id=$userId');
-      final response = await http.delete(url).timeout(const Duration(seconds: 10));
+      final response = await http.delete(url).timeout(const Duration(seconds: 60));
       if (response.statusCode == 200) {
         AppCacheService.purgeHistory(userId);
         return true;
@@ -225,7 +228,7 @@ class ApiService {
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'user_id': userId}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -244,7 +247,7 @@ class ApiService {
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'user_id': userId}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
@@ -274,7 +277,7 @@ class ApiService {
       final uri = Uri.parse('$baseUrl/api/v1/sessions/history').replace(
         queryParameters: queryParams,
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 20));
+      final response = await http.get(uri).timeout(const Duration(seconds: 60));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final list = data['history'] as List<dynamic>? ?? [];
@@ -346,7 +349,7 @@ class ApiService {
           'dietary_type': dietaryType,
           'allergies': allergies,
         }),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 60));
       return response.statusCode == 200;
     } catch (e) {
       debugPrint('Error ApiService.syncUserProfile: $e');
@@ -358,7 +361,7 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getMyVouchers(String userId) async {
     try {
       final url = Uri.parse('$baseUrl/api/v1/vouchers/my?user_id=$userId');
-      final response = await http.get(url).timeout(const Duration(seconds: 20));
+      final response = await http.get(url).timeout(const Duration(seconds: 60));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final list = data['vouchers'] as List<dynamic>? ?? [];
