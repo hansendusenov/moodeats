@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "mood-eats-f07b9",
     "public": "flutter_app/build/web",
     "ignore": [
       "firebase.json",
