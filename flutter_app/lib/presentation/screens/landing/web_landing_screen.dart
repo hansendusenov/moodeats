@@ -83,6 +83,13 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
   }
 
   void _navigateToApp({int tabIndex = 0}) {
+    final authUser = ref.read(authUserProvider);
+    if (authUser == null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
+    }
     ref.read(mainTabProvider.notifier).state = tabIndex;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),

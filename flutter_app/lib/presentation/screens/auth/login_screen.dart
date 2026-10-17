@@ -11,6 +11,7 @@ import 'package:moodeats_app/presentation/screens/auth/complete_profile_screen.d
 import 'package:moodeats_app/presentation/screens/auth/google_oauth_screen.dart';
 import 'package:moodeats_app/presentation/screens/auth/register_screen.dart';
 import 'package:moodeats_app/presentation/screens/main_navigation_screen.dart';
+import 'package:moodeats_app/presentation/screens/landing/web_landing_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -461,10 +462,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: () {
                         if (Navigator.of(context).canPop()) {
                           Navigator.of(context).pop();
-                        } else {
-                          ref.read(mainTabProvider.notifier).state = 0;
+                        } else if (kIsWeb) {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+                            MaterialPageRoute(builder: (_) => const WebLandingScreen()),
                           );
                         }
                       },
@@ -719,29 +719,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
           ),
         ),
-        const SizedBox(height: 16),
-
-        // Continue as Guest Option
-        Center(
-          child: TextButton(
-            onPressed: () {
-              ref.read(mainTabProvider.notifier).state = 0;
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
-                (route) => false,
-              );
-            },
-            child: Text(
-              tr.isId ? 'Lanjutkan sebagai Tamu →' : 'Continue as Guest →',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
 
         // Register link
         Center(
