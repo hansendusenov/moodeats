@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Environment & Secrets (NEVER upload to Cloud Build)
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!*.example
+
+# Exclude Flutter (Compiled and deployed separately to Firebase Hosting)
+flutter_app/
+
+# Exclude local Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Exclude database scripts
+database/
+*.sql
+
+# IMPORTANT: Include cloud_run directory
+!cloud_run/
+!cloud_run/**
+
+# IMPORTANT: Include web_admin/vendor so we don't have to download 100MB vendor packages during Cloud Build
+!web_admin/vendor/
+!web_admin/vendor/**

@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Environment & Secrets (NEVER bake into image!)
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!*.env.example
+
+# Local Virtualenvs & Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv/
+ENV/
+
+# Exclude Flutter App (Hosted on Firebase Hosting, not backend!)
+flutter_app/
+
+# Exclude Database scripts & scratch
+database/
+*.sql
+scratch/
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db

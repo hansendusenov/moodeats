@@ -183,3 +183,10 @@ flutter_app/ios/Flutter/flutter_export_environment.sh
 flutter_app/linux/flutter/
 flutter_app/macos/Flutter/
 flutter_app/windows/flutter/
+ 
+# Cloud Run Deployment Folder
+cloud_run/
+
+
+# Firebase CLI cache
+.firebase/

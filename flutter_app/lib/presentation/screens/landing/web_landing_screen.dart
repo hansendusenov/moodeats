@@ -10,7 +10,6 @@ import 'package:moodeats_app/presentation/screens/auth/complete_profile_screen.d
 import 'package:moodeats_app/presentation/screens/auth/login_screen.dart';
 import 'package:moodeats_app/presentation/screens/main_navigation_screen.dart';
 import 'package:moodeats_app/presentation/screens/roulette/bite_roulette_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class WebLandingScreen extends ConsumerStatefulWidget {
   const WebLandingScreen({super.key});
@@ -812,34 +811,8 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
             style: TextStyle(fontSize: 12, color: Colors.white54),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 20,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              TextButton(
-                onPressed: () => _navigateToApp(tabIndex: 0),
-                child: const Text('Aplikasi Web', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ),
-              TextButton(
-                onPressed: () {
-                  launchUrl(Uri.parse('http://localhost:8081'), mode: LaunchMode.externalApplication);
-                },
-                child: const Text('Admin Portal (8081)', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BiteRouletteScreen()),
-                  );
-                },
-                child: const Text('Bite Roulette', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           const Text(
-            '© 2026 MoodEats • AI Builder Cup 2026',
+            '© 2026 MoodEats',
             style: TextStyle(fontSize: 11, color: Colors.white38),
           ),
         ],

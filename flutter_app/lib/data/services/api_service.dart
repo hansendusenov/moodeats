@@ -13,13 +13,11 @@ class ApiService {
   late final String baseUrl;
 
   ApiService() {
-    String configuredUrl = dotenv.env['ADK_AGENT_BASE_URL'] ??
-        dotenv.env['AGENT_API_URL'] ??
-        'http://localhost:8080';
-    if (kIsWeb) {
-      // In local browser, connect directly to localhost:8080
-      configuredUrl = 'http://localhost:8080';
-    }
+    final envUrl = dotenv.env['ADK_AGENT_BASE_URL'] ?? dotenv.env['AGENT_API_URL'];
+    String configuredUrl = (envUrl != null && envUrl.isNotEmpty)
+        ? envUrl
+        : (kIsWeb ? 'http://localhost:8080' : 'http://10.0.2.2:8080');
+
     baseUrl = configuredUrl.endsWith('/')
         ? configuredUrl.substring(0, configuredUrl.length - 1)
         : configuredUrl;

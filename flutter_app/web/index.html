@@ -42,23 +42,7 @@
     };
     window.getWebSession = function() {
       try {
-        let saved = localStorage.getItem('moodeats_web_session');
-        if (!saved) {
-          // Pre-seed previously authenticated account: Hansen Dusenov
-          const defaultSession = JSON.stringify({
-            id: 'moodeats_uid_hansendusenov',
-            email: 'hansendusenov@gmail.com',
-            displayName: 'Hansen Dusenov',
-            birthDate: '1998-05-15',
-            gender: 'Laki-laki',
-            idToken: 'moodeats_saved_token_hansen',
-            refreshToken: 'moodeats_refresh_hansen',
-            authProvider: 'google'
-          });
-          localStorage.setItem('moodeats_web_session', defaultSession);
-          return defaultSession;
-        }
-        return saved;
+        return localStorage.getItem('moodeats_web_session') || '';
       } catch(e) {
         return '';
       }
