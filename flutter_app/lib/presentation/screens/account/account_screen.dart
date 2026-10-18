@@ -7,8 +7,10 @@ import 'package:moodeats_app/core/localization/app_strings.dart';
 import 'package:moodeats_app/data/providers/app_providers.dart';
 import 'package:moodeats_app/data/services/location_service.dart';
 import 'package:moodeats_app/data/services/firebase_auth_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:moodeats_app/presentation/screens/auth/complete_profile_screen.dart';
 import 'package:moodeats_app/presentation/screens/auth/login_screen.dart';
+import 'package:moodeats_app/presentation/screens/landing/web_landing_screen.dart';
 import 'package:moodeats_app/presentation/widgets/voucher_countdown_dialog.dart';
 import 'package:moodeats_app/presentation/widgets/dietary_preferences_modal.dart';
 import 'package:moodeats_app/presentation/widgets/bouncy_tap.dart';
@@ -210,7 +212,9 @@ class AccountScreen extends ConsumerWidget {
             ),
           );
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            MaterialPageRoute(
+              builder: (_) => kIsWeb ? const WebLandingScreen() : const LoginScreen(),
+            ),
             (route) => false,
           );
         }
@@ -255,7 +259,9 @@ class AccountScreen extends ConsumerWidget {
       await ref.read(authUserProvider.notifier).signOut();
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(
+            builder: (_) => kIsWeb ? const WebLandingScreen() : const LoginScreen(),
+          ),
           (route) => false,
         );
       }

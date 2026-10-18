@@ -5,26 +5,26 @@
 <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
     <div>
         <div class="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-wider">
-            <span>Admin Console</span>
+            <span><?= esc(lang('Admin.brand_name')) ?></span>
             <span>/</span>
-            <span>Promosi &amp; Ads</span>
+            <span><?= esc(lang('Admin.nav_banners')) ?></span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Banner Iklan</span>
+            <span class="text-red-600 font-bold"><?= esc(lang('Admin.banners_badge')) ?></span>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-2">
-            Banner &amp; Time-Parting Ads Management
+            <?= esc(lang('Admin.banners_title')) ?>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-purple-50 text-purple-700 border border-purple-200">
-                Geofenced &amp; Scheduled
+                <?= esc(lang('Admin.banners_badge')) ?>
             </span>
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
-            Iklan banner dengan kemampuan geofencing (radius/kota) dan penjadwalan jam aktif (time-parting).
+            <?= esc(lang('Admin.banners_desc')) ?>
         </p>
     </div>
     <div class="flex items-center gap-2">
-        <a href="/banners/create" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+        <a href="<?= site_url('banners/create') ?>" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
             <span class="material-symbols-outlined text-[16px]">campaign</span>
-            Buat Kampanye Banner
+            <?= esc(lang('Admin.banners_btn_create')) ?>
         </a>
     </div>
 </div>
@@ -36,7 +36,7 @@
         <div class="relative flex-1 min-w-[260px] max-w-md">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
             <input type="text" id="bannerSearchInput" 
-                   placeholder="Cari judul iklan, kota target, atau jam tayang..." 
+                   placeholder="<?= esc(lang('Admin.banners_search_placeholder')) ?>" 
                    class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
             <button id="clearBannerSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined text-[16px]">cancel</span>
@@ -46,13 +46,13 @@
         <!-- Filter Status Buttons -->
         <div class="flex items-center gap-1.5 text-xs">
             <button type="button" onclick="filterBannerStatus('all')" id="bannerFilterBtnAll" class="px-2.5 py-1.5 rounded-lg font-semibold text-red-600 bg-red-50 border border-red-200 transition-colors">
-                Semua (<span id="bannerCountAll"><?= count($banners) ?></span>)
+                <?= esc(lang('Admin.filter_all')) ?> (<span id="bannerCountAll"><?= count($banners) ?></span>)
             </button>
             <button type="button" onclick="filterBannerStatus('active')" id="bannerFilterBtnActive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Aktif (<span id="bannerCountActive"><?= count(array_filter($banners, fn($b) => $b['is_active'])) ?></span>)
+                <?= esc(lang('Admin.filter_active')) ?> (<span id="bannerCountActive"><?= count(array_filter($banners, fn($b) => $b['is_active'])) ?></span>)
             </button>
             <button type="button" onclick="filterBannerStatus('inactive')" id="bannerFilterBtnInactive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Nonaktif (<span id="bannerCountInactive"><?= count(array_filter($banners, fn($b) => !$b['is_active'])) ?></span>)
+                <?= esc(lang('Admin.filter_inactive')) ?> (<span id="bannerCountInactive"><?= count(array_filter($banners, fn($b) => !$b['is_active'])) ?></span>)
             </button>
         </div>
     </div>
@@ -63,13 +63,13 @@
         <table class="w-full text-left text-xs">
             <thead>
                 <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-mono uppercase text-[10px]">
-                    <th class="py-3 px-4">Banner &amp; Judul</th>
-                    <th class="py-3 px-4">Targeting</th>
-                    <th class="py-3 px-4">Time-Parting (Jam)</th>
-                    <th class="py-3 px-4">Periode Tayang</th>
-                    <th class="py-3 px-4 text-center">Prioritas</th>
-                    <th class="py-3 px-4 text-center">Status</th>
-                    <th class="py-3 px-4 text-right">Aksi</th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.banners_col_banner_title')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.banners_col_targeting')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.banners_col_time_parting')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.banners_col_period')) ?></th>
+                    <th class="py-3 px-4 text-center"><?= esc(lang('Admin.banners_col_priority')) ?></th>
+                    <th class="py-3 px-4 text-center"><?= esc(lang('Admin.banners_col_status')) ?></th>
+                    <th class="py-3 px-4 text-right"><?= esc(lang('Admin.banners_col_action')) ?></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100" id="bannerTableBody">
@@ -77,7 +77,7 @@
                     <tr id="emptyBannerInitial">
                         <td colspan="7" class="py-12 text-center text-slate-400">
                             <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">ad_off</span>
-                            Belum ada kampanye banner aktif. Klik "Buat Kampanye Banner" untuk memulai promosi bersponsor.
+                            <?= esc(lang('Admin.banners_empty')) ?>
                         </td>
                     </tr>
                 <?php else: ?>
@@ -96,7 +96,7 @@
                                         <span class="font-bold text-slate-900 block"><?= esc($b['title']) ?></span>
                                         <?php if (!empty($b['target_url'])): ?>
                                             <a href="<?= esc($b['target_url']) ?>" target="_blank" class="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5">
-                                                Link Target <span class="material-symbols-outlined text-[10px]">open_in_new</span>
+                                                <?= esc(lang('Admin.banners_target_link')) ?> <span class="material-symbols-outlined text-[10px]">open_in_new</span>
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -118,11 +118,11 @@
                                 <?php endif; ?>
                             </td>
                             <td class="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                                <?= ($b['start_hour'] && $b['end_hour']) ? substr($b['start_hour'], 0, 5) . ' - ' . substr($b['end_hour'], 0, 5) : '24 Jam Penuh' ?>
+                                <?= ($b['start_hour'] && $b['end_hour']) ? substr($b['start_hour'], 0, 5) . ' - ' . substr($b['end_hour'], 0, 5) : '24/7' ?>
                             </td>
                             <td class="py-3 px-4 text-slate-600 whitespace-nowrap">
                                 <div class="text-[11px] font-mono">
-                                    <span><?= date('d M Y', strtotime($b['start_date'])) ?></span> s/d
+                                    <span><?= date('d M Y', strtotime($b['start_date'])) ?></span> -
                                     <span><?= date('d M Y', strtotime($b['end_date'])) ?></span>
                                 </div>
                             </td>
@@ -130,74 +130,73 @@
                                 <?= $b['priority'] ?>
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
-                                <a href="/banners/toggle/<?= $b['id'] ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono transition-colors <?= $b['is_active'] ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' ?>">
+                                <a href="<?= site_url('banners/toggle/' . $b['id']) ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono transition-colors <?= $b['is_active'] ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' ?>">
                                     <span class="w-1.5 h-1.5 rounded-full <?= $b['is_active'] ? 'bg-emerald-500' : 'bg-slate-400' ?>"></span>
-                                    <?= $b['is_active'] ? 'AKTIF' : 'NONAKTIF' ?>
+                                    <?= $b['is_active'] ? esc(strtoupper(lang('Admin.active'))) : esc(strtoupper(lang('Admin.inactive'))) ?>
                                 </a>
                             </td>
                             <td class="py-3 px-4 text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1">
-                                    <a href="/banners/edit/<?= $b['id'] ?>" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors shadow-2xs" title="Edit">
+                                    <a href="<?= site_url('banners/edit/' . $b['id']) ?>" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors shadow-2xs" title="<?= esc(lang('Admin.edit')) ?>">
                                         <span class="material-symbols-outlined text-[16px]">edit</span>
                                     </a>
-                                    <a href="/banners/delete/<?= $b['id'] ?>" 
-                                       data-confirm="Apakah Anda yakin ingin menghapus kampanye banner '<?= esc($b['title']) ?>'?" 
-                                       data-confirm-title="Hapus Banner Iklan" 
-                                       data-confirm-btn="Hapus Banner" 
-                                       data-confirm-type="danger" 
-                                       class="p-1.5 rounded-lg border border-red-100 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors shadow-2xs cursor-pointer" 
-                                       title="Hapus">
+                                    <a href="<?= site_url('banners/delete/' . $b['id']) ?>" 
+                                       data-confirm="<?= esc(lang('Admin.confirm_delete_msg')) ?>"
+                                       data-confirm-title="<?= esc(lang('Admin.confirm_delete_title')) ?>"
+                                       data-confirm-btn="<?= esc(lang('Admin.confirm_delete_btn')) ?>"
+                                       data-confirm-type="danger"
+                                       class="p-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors shadow-2xs" title="<?= esc(lang('Admin.delete')) ?>">
                                         <span class="material-symbols-outlined text-[16px]">delete</span>
                                     </a>
                                 </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                    <tr id="emptySearchBannerRow" class="hidden">
-                        <td colspan="7" class="py-12 text-center text-slate-400">
-                            <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">search_off</span>
-                            Tidak ada kampanye banner yang cocok dengan pencarian Anda.
-                        </td>
-                    </tr>
                 <?php endif; ?>
+                <tr id="emptyBannerSearch" class="hidden">
+                    <td colspan="7" class="py-12 text-center text-slate-400">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">search_off</span>
+                        <?= esc(lang('Admin.no_data')) ?>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 
     <!-- Pagination Footer -->
-    <div id="bannerPaginationBar" class="p-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div class="flex items-center gap-2 text-slate-600">
-            <span>Tampilkan</span>
-            <select id="bannerPageSizeSelect" class="py-1 px-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold focus:ring-1 focus:ring-red-500">
-                <option value="5" selected>5</option>
+    <div class="px-4 py-3 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2 text-slate-500">
+            <span>Show</span>
+            <select id="bannerPageSizeSelect" class="py-1 px-2 text-xs border border-slate-200 rounded-md bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500">
                 <option value="10">10</option>
-                <option value="25">25</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
             </select>
-            <span>per halaman</span>
-            <span class="text-slate-300">|</span>
-            <span id="bannerPageInfoText" class="font-mono text-slate-500">Menampilkan 0 - 0 dari 0 data</span>
+            <span id="bannerPageInfoText" class="text-slate-500 ml-2">Loading...</span>
         </div>
-
         <div class="flex items-center gap-1" id="bannerPaginationButtons">
-            <!-- Dynamically generated page buttons -->
+            <!-- Dynamic Page Buttons -->
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('bannerSearchInput');
     const clearBtn = document.getElementById('clearBannerSearchBtn');
     const bannerRows = Array.from(document.querySelectorAll('.banner-row'));
-    const emptyRow = document.getElementById('emptySearchBannerRow');
-    const pageSizeSelect = document.getElementById('bannerPageSizeSelect');
+    const emptyRow = document.getElementById('emptyBannerSearch');
     const pageInfoText = document.getElementById('bannerPageInfoText');
     const paginationButtons = document.getElementById('bannerPaginationButtons');
+    const pageSizeSelect = document.getElementById('bannerPageSizeSelect');
 
     let currentFilter = 'all';
     let currentPage = 1;
-    let pageSize = parseInt(pageSizeSelect ? pageSizeSelect.value : 5);
+    let pageSize = parseInt(pageSizeSelect ? pageSizeSelect.value : 25);
     let filteredRows = [...bannerRows];
+
+    const isIndo = <?= json_encode(service('request')->getLocale() === 'id') ?>;
 
     function renderPagination() {
         const total = filteredRows.length;
@@ -211,10 +210,12 @@ document.addEventListener('DOMContentLoaded', function() {
         filteredRows.slice(startIdx, endIdx).forEach(r => r.classList.remove('hidden'));
 
         if (total === 0) {
-            pageInfoText.textContent = 'Menampilkan 0 data';
+            pageInfoText.textContent = isIndo ? 'Menampilkan 0 data' : 'Showing 0 entries';
             if (emptyRow) emptyRow.classList.remove('hidden');
         } else {
-            pageInfoText.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} banner`;
+            pageInfoText.textContent = isIndo 
+                ? `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} banner`
+                : `Showing ${startIdx + 1} - ${endIdx} of ${total} banners`;
             if (emptyRow) emptyRow.classList.add('hidden');
         }
 

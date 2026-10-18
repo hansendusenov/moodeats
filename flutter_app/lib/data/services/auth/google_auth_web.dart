@@ -32,3 +32,33 @@ void clearWebSession() {
     globalContext.callMethod('clearWebSession'.toJS);
   } catch (_) {}
 }
+
+String getWebSavedProfilesDb() {
+  try {
+    final res = globalContext.callMethod('getWebProfilesDb'.toJS) as JSString?;
+    return res?.toDart ?? '{}';
+  } catch (_) {
+    return '{}';
+  }
+}
+
+void saveWebProfilesDb(String jsonStr) {
+  try {
+    globalContext.callMethod('saveWebProfilesDb'.toJS, jsonStr.toJS);
+  } catch (_) {}
+}
+
+bool hasProfileUpdated() {
+  try {
+    final res = globalContext.callMethod('hasProfileUpdated'.toJS) as JSBoolean?;
+    return res?.toDart ?? false;
+  } catch (_) {
+    return false;
+  }
+}
+
+void setProfileUpdated(bool val) {
+  try {
+    globalContext.callMethod('setProfileUpdated'.toJS, val.toJS);
+  } catch (_) {}
+}

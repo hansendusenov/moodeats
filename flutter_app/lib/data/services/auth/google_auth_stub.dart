@@ -6,3 +6,7 @@ Future<Map<String, dynamic>> signInWithPopup() async {
 String getWebSavedSession() => '';
 void saveWebSession(String json) {}
 void clearWebSession() {}
+String getWebSavedProfilesDb() => '{}';
+void saveWebProfilesDb(String jsonStr) {}
+bool hasProfileUpdated() => false;
+void setProfileUpdated(bool val) {}

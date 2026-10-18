@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # MoodEats - Master Monorepo .gitignore
 # Covers: Root, Web Admin (CI4/PHP), ADK Agent (Python), Flutter App (Mobile)
 # ==============================================================================
@@ -184,8 +184,11 @@ flutter_app/linux/flutter/
 flutter_app/macos/Flutter/
 flutter_app/windows/flutter/
  
-# Cloud Run Deployment Folder
+# Deployment Folders (Cloud Run & VPS)
 cloud_run/
+cloud_run/**
+cloud_vps/
+cloud_vps/**
 
 
 # Firebase CLI cache

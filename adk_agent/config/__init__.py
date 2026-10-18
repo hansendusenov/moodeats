@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     # Google APIs
     google_places_api_key: str = ""
     google_gemini_api_key: str = ""
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.5-flash-lite"
     google_places_daily_quota: int = 150
 
     # App Config

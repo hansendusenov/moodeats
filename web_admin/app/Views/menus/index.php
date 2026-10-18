@@ -5,26 +5,26 @@
 <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
     <div>
         <div class="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-wider">
-            <span>Admin Console</span>
+            <span><?= esc(lang('Admin.brand_name')) ?></span>
             <span>/</span>
-            <span>Katalog Kuliner</span>
+            <span><?= esc(lang('Admin.nav_menus')) ?></span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Menu Kurasi</span>
+            <span class="text-red-600 font-bold"><?= esc(lang('Admin.menus_badge')) ?></span>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-2">
-            Default Curated Menus
+            <?= esc(lang('Admin.menus_title')) ?>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-50 text-amber-700 border border-amber-200">
-                Fallback Cards
+                <?= esc(lang('Admin.menus_badge')) ?>
             </span>
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
-            Daftar menu kurasi makanan lokal yang tampil di beranda aplikasi mobile sebelum rekomendasi AI dihasilkan.
+            <?= esc(lang('Admin.menus_desc')) ?>
         </p>
     </div>
     <div class="flex items-center gap-2">
-        <a href="/menus/create" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+        <a href="<?= site_url('menus/create') ?>" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
             <span class="material-symbols-outlined text-[16px]">add</span>
-            Tambah Menu Baru
+            <?= esc(lang('Admin.menus_btn_create')) ?>
         </a>
     </div>
 </div>
@@ -36,7 +36,7 @@
         <div class="relative flex-1 min-w-[260px] max-w-md">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
             <input type="text" id="menuSearchInput" 
-                   placeholder="Cari nama makanan, kategori, harga, atau deskripsi..." 
+                   placeholder="<?= esc(lang('Admin.menus_search_placeholder')) ?>" 
                    class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
             <button id="clearMenuSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined text-[16px]">cancel</span>
@@ -46,13 +46,13 @@
         <!-- Filter Status Buttons -->
         <div class="flex items-center gap-1.5 text-xs">
             <button type="button" onclick="filterMenuStatus('all')" id="menuFilterBtnAll" class="px-2.5 py-1.5 rounded-lg font-semibold text-red-600 bg-red-50 border border-red-200 transition-colors">
-                Semua (<span id="menuCountAll"><?= count($menus) ?></span>)
+                <?= esc(lang('Admin.filter_all')) ?> (<span id="menuCountAll"><?= count($menus) ?></span>)
             </button>
             <button type="button" onclick="filterMenuStatus('active')" id="menuFilterBtnActive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Aktif (<span id="menuCountActive"><?= count(array_filter($menus, fn($m) => $m['is_active'])) ?></span>)
+                <?= esc(lang('Admin.filter_active')) ?> (<span id="menuCountActive"><?= count(array_filter($menus, fn($m) => $m['is_active'])) ?></span>)
             </button>
             <button type="button" onclick="filterMenuStatus('inactive')" id="menuFilterBtnInactive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Nonaktif (<span id="menuCountInactive"><?= count(array_filter($menus, fn($m) => !$m['is_active'])) ?></span>)
+                <?= esc(lang('Admin.filter_inactive')) ?> (<span id="menuCountInactive"><?= count(array_filter($menus, fn($m) => !$m['is_active'])) ?></span>)
             </button>
         </div>
     </div>
@@ -63,19 +63,19 @@
         <table class="w-full text-left text-xs">
             <thead>
                 <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-mono uppercase text-[10px]">
-                    <th class="py-3 px-4 text-center w-12">No</th>
-                    <th class="py-3 px-4">Menu &amp; Gambar</th>
-                    <th class="py-3 px-4">Kategori Emosional</th>
-                    <th class="py-3 px-4">Estimasi Harga</th>
-                    <th class="py-3 px-4">Deskripsi</th>
-                    <th class="py-3 px-4 text-center">Status</th>
-                    <th class="py-3 px-4 text-right">Aksi</th>
+                    <th class="py-3 px-4 text-center w-12"><?= esc(lang('Admin.menus_col_no')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.menus_col_menu')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.menus_col_category')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.menus_col_price')) ?></th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.menus_col_desc')) ?></th>
+                    <th class="py-3 px-4 text-center"><?= esc(lang('Admin.menus_col_status')) ?></th>
+                    <th class="py-3 px-4 text-right"><?= esc(lang('Admin.menus_col_action')) ?></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100" id="menuTableBody">
                 <?php if (empty($menus)): ?>
                     <tr id="emptyMenuInitial">
-                        <td colspan="7" class="py-8 text-center text-slate-400">Belum ada menu kurasi.</td>
+                        <td colspan="7" class="py-8 text-center text-slate-400"><?= esc(lang('Admin.menus_empty')) ?></td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($menus as $menu): ?>
@@ -111,23 +111,23 @@
                                 <?= esc($menu['description'] ?? '-') ?>
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
-                                <a href="/menus/toggle/<?= $menu['id'] ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono transition-colors <?= $menu['is_active'] ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' ?>" title="Klik untuk ubah status">
+                                <a href="<?= site_url('menus/toggle/' . $menu['id']) ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono transition-colors <?= $menu['is_active'] ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' ?>" title="<?= esc(lang('Admin.status')) ?>">
                                     <span class="w-1.5 h-1.5 rounded-full <?= $menu['is_active'] ? 'bg-emerald-500' : 'bg-slate-400' ?>"></span>
-                                    <?= $menu['is_active'] ? 'AKTIF' : 'NONAKTIF' ?>
+                                    <?= $menu['is_active'] ? esc(strtoupper(lang('Admin.active'))) : esc(strtoupper(lang('Admin.inactive'))) ?>
                                 </a>
                             </td>
                             <td class="py-3 px-4 text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1">
-                                    <a href="/menus/edit/<?= $menu['id'] ?>" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors shadow-2xs" title="Edit">
+                                    <a href="<?= site_url('menus/edit/' . $menu['id']) ?>" class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors shadow-2xs" title="<?= esc(lang('Admin.edit')) ?>">
                                         <span class="material-symbols-outlined text-[16px]">edit</span>
                                     </a>
-                                    <a href="/menus/delete/<?= $menu['id'] ?>" 
-                                       data-confirm="Apakah Anda yakin ingin menghapus menu '<?= esc($menu['food_name']) ?>'?" 
-                                       data-confirm-title="Hapus Menu Kurasi" 
-                                       data-confirm-btn="Hapus Menu" 
+                                    <a href="<?= site_url('menus/delete/' . $menu['id']) ?>" 
+                                       data-confirm="<?= esc(lang('Admin.confirm_delete_msg')) ?>" 
+                                       data-confirm-title="<?= esc(lang('Admin.confirm_delete_title')) ?>" 
+                                       data-confirm-btn="<?= esc(lang('Admin.confirm_delete_btn')) ?>" 
                                        data-confirm-type="danger" 
                                        class="p-1.5 rounded-lg border border-red-100 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors shadow-2xs cursor-pointer" 
-                                       title="Hapus">
+                                       title="<?= esc(lang('Admin.delete')) ?>">
                                         <span class="material-symbols-outlined text-[16px]">delete</span>
                                     </a>
                                 </div>
@@ -137,7 +137,7 @@
                     <tr id="emptySearchMenuRow" class="hidden">
                         <td colspan="7" class="py-12 text-center text-slate-400">
                             <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">search_off</span>
-                            Tidak ada menu kurasi yang cocok dengan kata kunci pencarian.
+                            <?= esc(lang('Admin.no_data')) ?>
                         </td>
                     </tr>
                 <?php endif; ?>
@@ -148,15 +148,15 @@
     <!-- Pagination Footer -->
     <div id="menuPaginationBar" class="p-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2 text-slate-600">
-            <span>Tampilkan</span>
+            <span>Show</span>
             <select id="menuPageSizeSelect" class="py-1 px-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold focus:ring-1 focus:ring-red-500">
                 <option value="6">6</option>
                 <option value="10" selected>10</option>
                 <option value="20">20</option>
             </select>
-            <span>per halaman</span>
+            <span>/ page</span>
             <span class="text-slate-300">|</span>
-            <span id="menuPageInfoText" class="font-mono text-slate-500">Menampilkan 0 - 0 dari 0 data</span>
+            <span id="menuPageInfoText" class="font-mono text-slate-500">Loading...</span>
         </div>
 
         <div class="flex items-center gap-1" id="menuPaginationButtons">
@@ -180,6 +180,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let pageSize = parseInt(pageSizeSelect ? pageSizeSelect.value : 10);
     let filteredRows = [...menuRows];
 
+    const isIndo = <?= json_encode(service('request')->getLocale() === 'id') ?>;
+
     function renderPagination() {
         const total = filteredRows.length;
         const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -192,10 +194,12 @@ document.addEventListener('DOMContentLoaded', function() {
         filteredRows.slice(startIdx, endIdx).forEach(r => r.classList.remove('hidden'));
 
         if (total === 0) {
-            pageInfoText.textContent = 'Menampilkan 0 data';
+            pageInfoText.textContent = isIndo ? 'Menampilkan 0 data' : 'Showing 0 entries';
             if (emptyRow) emptyRow.classList.remove('hidden');
         } else {
-            pageInfoText.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} menu`;
+            pageInfoText.textContent = isIndo 
+                ? `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} menu`
+                : `Showing ${startIdx + 1} - ${endIdx} of ${total} dishes`;
             if (emptyRow) emptyRow.classList.add('hidden');
         }
 

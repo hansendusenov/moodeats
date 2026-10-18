@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="light" lang="id">
+<html class="light" lang="<?= esc(service('request')->getLocale()) ?>">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Login - MoodEats Web Admin Console</title>
+    <title><?= esc(lang('Admin.login_title')) ?></title>
     <link rel="icon" type="image/png" href="/assets/images/moodeats_mascot.png"/>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -18,17 +18,37 @@
 <body class="bg-gradient-to-br from-slate-50 via-red-50/20 to-slate-100 min-h-screen flex items-center justify-center p-4">
 
 <div class="w-full max-w-md">
+    <!-- Language Switcher Bar -->
+    <?php 
+        $currentLocale = service('request')->getLocale(); 
+        $currentReqUri = current_url();
+    ?>
+    <div class="flex justify-end mb-4">
+        <div class="inline-flex items-center bg-white/90 backdrop-blur-xs p-1 rounded-xl border border-red-100 shadow-xs text-xs font-bold" title="<?= esc(lang('Admin.lang_switch_tooltip')) ?>">
+            <a href="<?= site_url('lang/en') ?>?return_url=<?= urlencode($currentReqUri) ?>" 
+               class="px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 <?= $currentLocale === 'en' ? 'bg-red-600 text-white shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-900' ?>">
+                <span class="text-xs">🇬🇧</span>
+                <span>English</span>
+            </a>
+            <a href="<?= site_url('lang/id') ?>?return_url=<?= urlencode($currentReqUri) ?>" 
+               class="px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 <?= $currentLocale === 'id' ? 'bg-red-600 text-white shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-900' ?>">
+                <span class="text-xs">🇮🇩</span>
+                <span>Indonesia</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Brand Header -->
     <div class="text-center mb-8">
         <img src="/assets/images/moodeats_mascot.png" class="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-md" alt="MoodEats Mascot"/>
-        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">MoodEats Admin</h1>
-        <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-mono">Autonomous Culinary Engine Console</p>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight"><?= esc(lang('Admin.brand_name')) ?></h1>
+        <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-mono"><?= esc(lang('Admin.login_mascot_sub')) ?></p>
     </div>
 
     <!-- Login Card -->
     <div class="bg-white rounded-2xl p-8 border border-red-100 shadow-xl shadow-slate-200/50">
-        <h2 class="text-lg font-bold text-slate-900 mb-1">Masuk ke Backoffice</h2>
-        <p class="text-xs text-slate-500 mb-6">Gunakan akun admin terdaftar untuk mengelola kampanye dan menu.</p>
+        <h2 class="text-lg font-bold text-slate-900 mb-1"><?= esc(lang('Admin.login_card_title')) ?></h2>
+        <p class="text-xs text-slate-500 mb-6"><?= esc(lang('Admin.login_card_desc')) ?></p>
 
         <?php if (session()->getFlashdata('error')): ?>
             <div class="mb-4 flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
@@ -44,11 +64,11 @@
             </div>
         <?php endif; ?>
 
-        <form action="/login" method="post" class="space-y-4">
+        <form action="<?= site_url('login') ?>" method="post" class="space-y-4">
             <?= csrf_field() ?>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="username">Username</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="username"><?= esc(lang('Admin.login_username')) ?></label>
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">person</span>
                     <input type="text" id="username" name="username" value="<?= old('username', 'superadmin') ?>" required
@@ -58,19 +78,19 @@
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="password">Password</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="password"><?= esc(lang('Admin.login_password')) ?></label>
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">lock</span>
                     <input type="password" id="password" name="password" required
                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                            placeholder="••••••••••••" />
                 </div>
-                <p class="text-[11px] text-slate-400 mt-1 font-mono">Akun default: superadmin / MoodEats@2026</p>
+                <p class="text-[11px] text-slate-400 mt-1 font-mono"><?= esc(lang('Admin.login_default_creds')) ?></p>
             </div>
 
             <button type="submit"
                     class="w-full mt-2 py-2.5 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-sm tracking-tight shadow-md shadow-red-200 transition-all flex items-center justify-center gap-2">
-                <span>Masuk Sekarang</span>
+                <span><?= esc(lang('Admin.login_btn_submit')) ?></span>
                 <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
         </form>
@@ -79,7 +99,7 @@
     <!-- Security notice -->
     <div class="mt-6 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
         <span class="material-symbols-outlined text-[16px] text-slate-400">lock_open</span>
-        <span>Koneksi aman ke PostgreSQL Supabase via TLS</span>
+        <span><?= esc(lang('Admin.login_tls_notice')) ?></span>
     </div>
 </div>
 

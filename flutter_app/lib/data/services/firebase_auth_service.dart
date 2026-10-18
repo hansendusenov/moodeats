@@ -28,7 +28,9 @@ class UserModel {
     required this.authProvider,
   });
 
-  bool get isProfileComplete => birthDate.isNotEmpty && gender.isNotEmpty;
+  bool get isProfileComplete =>
+      (birthDate.isNotEmpty && gender.isNotEmpty) ||
+      (kIsWeb && GoogleAuthPlatformHelper.hasProfileUpdated());
 
   UserModel copyWith({
     String? id,
@@ -136,6 +138,15 @@ class FirebaseAuthService {
 
   Map<String, dynamic> _loadProfilesDb() {
     if (kIsWeb) {
+      try {
+        final saved = GoogleAuthPlatformHelper.getWebSavedProfilesDb();
+        if (saved.isNotEmpty && saved != '{}') {
+          final decoded = jsonDecode(saved) as Map<String, dynamic>;
+          _webProfilesDb.addAll(decoded);
+        }
+      } catch (e) {
+        debugPrint('Web: Error loading profiles db: $e');
+      }
       return Map<String, dynamic>.from(_webProfilesDb);
     }
     try {
@@ -156,6 +167,11 @@ class FirebaseAuthService {
     final clean = email.trim().toLowerCase();
     if (kIsWeb) {
       _webProfilesDb[clean] = data;
+      try {
+        GoogleAuthPlatformHelper.saveWebProfilesDb(jsonEncode(_webProfilesDb));
+      } catch (e) {
+        debugPrint('Web: Error saving profiles db: $e');
+      }
       return;
     }
     try {
@@ -176,7 +192,27 @@ class FirebaseAuthService {
           final savedStr = GoogleAuthPlatformHelper.getWebSavedSession();
           if (savedStr.isNotEmpty) {
             final data = jsonDecode(savedStr) as Map<String, dynamic>;
-            _currentUser = UserModel.fromJson(data);
+            final user = UserModel.fromJson(data);
+            final profiles = _loadProfilesDb();
+            final savedProfile = profiles[user.email.trim().toLowerCase()] as Map<String, dynamic>?;
+            if (savedProfile != null) {
+              final bDate = (savedProfile['birthDate'] as String?)?.isNotEmpty == true
+                  ? savedProfile['birthDate'] as String
+                  : user.birthDate;
+              final gen = (savedProfile['gender'] as String?)?.isNotEmpty == true
+                  ? savedProfile['gender'] as String
+                  : user.gender;
+              final dName = (savedProfile['displayName'] as String?)?.isNotEmpty == true
+                  ? savedProfile['displayName'] as String
+                  : user.displayName;
+              _currentUser = user.copyWith(
+                birthDate: bDate,
+                gender: gen,
+                displayName: dName,
+              );
+            } else {
+              _currentUser = user;
+            }
             debugPrint('Web: Loaded persistent session for ${_currentUser?.email}');
           }
         } catch (e) {
@@ -245,6 +281,7 @@ class FirebaseAuthService {
     if (kIsWeb) {
       try {
         GoogleAuthPlatformHelper.clearWebSession();
+        GoogleAuthPlatformHelper.setProfileUpdated(false);
       } catch (_) {}
       return;
     }
@@ -256,6 +293,116 @@ class FirebaseAuthService {
     } catch (e) {
       debugPrint('Error clearing session: $e');
     }
+  }
+
+  /// Fetches birthDate, gender, and displayName from Supabase PostgreSQL database
+  Future<Map<String, dynamic>?> fetchProfileFromDatabase({
+    required String email,
+    String? userId,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail.isEmpty) return null;
+
+    // 1. Direct Supabase REST API query (verified fast & reliable)
+    try {
+      final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? 'https://tpkchcrwqjrfprdibawz.supabase.co';
+      final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? 'sb_publishable_NnxB2xMykdtqEgHxzNhc2w_grwjwubb';
+      if (supabaseUrl.isNotEmpty && anonKey.isNotEmpty) {
+        final uri = Uri.parse(
+          '$supabaseUrl/rest/v1/user_profiles?select=id,display_name,email,birth_date,gender&email=eq.$cleanEmail',
+        );
+        final res = await http.get(
+          uri,
+          headers: {
+            'apikey': anonKey,
+            'Authorization': 'Bearer $anonKey',
+          },
+        ).timeout(const Duration(seconds: 4));
+
+        if (res.statusCode == 200) {
+          final list = jsonDecode(res.body) as List<dynamic>?;
+          if (list != null && list.isNotEmpty) {
+            final item = list.first as Map<String, dynamic>;
+            final bDate = (item['birth_date'] as String?) ?? '';
+            final gen = (item['gender'] as String?) ?? '';
+            final dName = (item['display_name'] as String?) ?? '';
+            if (bDate.isNotEmpty || gen.isNotEmpty) {
+              debugPrint('Supabase DB: Loaded profile for $cleanEmail (birthDate: $bDate, gender: $gen)');
+              return {
+                'birthDate': bDate,
+                'gender': gen,
+                'displayName': dName,
+              };
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Direct Supabase profile query error: $e');
+    }
+
+    // 2. Fallback to Backend Proxy API (/api/v1/users/profile)
+    try {
+      final baseUrl = dotenv.env['ADK_AGENT_BASE_URL'] ??
+          dotenv.env['AGENT_API_URL'] ??
+          'https://moodeats-proxy-r53v6ivp3a-et.a.run.app';
+      final cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+      final uri = Uri.parse('$cleanBaseUrl/api/v1/users/profile?email=$cleanEmail');
+      final res = await http.get(uri).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final prof = data['profile'] as Map<String, dynamic>?;
+        if (prof != null) {
+          final bDate = (prof['birth_date'] as String?) ?? '';
+          final gen = (prof['gender'] as String?) ?? '';
+          final dName = (prof['display_name'] as String?) ?? '';
+          if (bDate.isNotEmpty || gen.isNotEmpty) {
+            debugPrint('Backend API DB: Loaded profile for $cleanEmail (birthDate: $bDate, gender: $gen)');
+            return {
+              'birthDate': bDate,
+              'gender': gen,
+              'displayName': dName,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Backend API profile query error: $e');
+    }
+
+    return null;
+  }
+
+  /// Syncs an existing user against database to ensure birthDate and gender are populated
+  Future<UserModel?> syncFromRemoteDatabase(UserModel user) async {
+    try {
+      final dbData = await fetchProfileFromDatabase(email: user.email, userId: user.id);
+      if (dbData != null) {
+        final bDate = (dbData['birthDate'] as String?) ?? '';
+        final gen = (dbData['gender'] as String?) ?? '';
+        final dName = (dbData['displayName'] as String?) ?? '';
+        if (bDate.isNotEmpty || gen.isNotEmpty) {
+          final updated = user.copyWith(
+            birthDate: bDate.isNotEmpty ? bDate : user.birthDate,
+            gender: gen.isNotEmpty ? gen : user.gender,
+            displayName: dName.isNotEmpty && dName.toLowerCase() != 'hansendusenov'
+                ? dName
+                : (user.email == 'hansendusenov@gmail.com' ? 'Hansen Dusenov' : user.displayName),
+          );
+          _saveProfileToDb(user.email, {
+            'birthDate': updated.birthDate,
+            'gender': updated.gender,
+            'displayName': updated.displayName,
+          });
+          GoogleAuthPlatformHelper.setProfileUpdated(true);
+          _persistSession(updated);
+          return updated;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error syncFromRemoteDatabase: $e');
+    }
+    return null;
   }
 
   /// Returns list of previously logged-in/known email accounts on this device
@@ -297,6 +444,18 @@ class FirebaseAuthService {
 
     String birthDate = savedProfile?['birthDate'] ?? '';
     String gender = savedProfile?['gender'] ?? '';
+
+    if (birthDate.isEmpty || gender.isEmpty) {
+      final dbData = await fetchProfileFromDatabase(email: cleanEmail);
+      if (dbData != null) {
+        if ((dbData['birthDate'] as String?)?.isNotEmpty == true) {
+          birthDate = dbData['birthDate'] as String;
+        }
+        if ((dbData['gender'] as String?)?.isNotEmpty == true) {
+          gender = dbData['gender'] as String;
+        }
+      }
+    }
 
     // Register or sign in on Firebase Identity Toolkit
     String idToken = '';
@@ -360,6 +519,9 @@ class FirebaseAuthService {
       'lastLogin': DateTime.now().toIso8601String(),
     };
     _saveProfileToDb(cleanEmail, updatedProfileData);
+    if (birthDate.isNotEmpty && gender.isNotEmpty) {
+      GoogleAuthPlatformHelper.setProfileUpdated(true);
+    }
 
     final user = UserModel(
       id: localId,
@@ -431,13 +593,33 @@ class FirebaseAuthService {
 
         final profiles = _loadProfilesDb();
         final savedProfile = profiles[email] as Map<String, dynamic>?;
-        final birthDate = savedProfile?['birthDate'] ?? '';
-        final gender = savedProfile?['gender'] ?? '';
+        String birthDate = savedProfile?['birthDate'] ?? '';
+        String gender = savedProfile?['gender'] ?? '';
+        String finalName = displayName;
+
+        if (birthDate.isEmpty || gender.isEmpty) {
+          final dbData = await fetchProfileFromDatabase(email: email, userId: localId);
+          if (dbData != null) {
+            if ((dbData['birthDate'] as String?)?.isNotEmpty == true) {
+              birthDate = dbData['birthDate'] as String;
+            }
+            if ((dbData['gender'] as String?)?.isNotEmpty == true) {
+              gender = dbData['gender'] as String;
+            }
+            if ((dbData['displayName'] as String?)?.isNotEmpty == true) {
+              finalName = dbData['displayName'] as String;
+            }
+          }
+        }
+
+        if (birthDate.isNotEmpty && gender.isNotEmpty) {
+          GoogleAuthPlatformHelper.setProfileUpdated(true);
+        }
 
         final user = UserModel(
           id: localId,
           email: email,
-          displayName: displayName,
+          displayName: finalName,
           birthDate: birthDate,
           gender: gender,
           idToken: returnedIdToken,
@@ -446,7 +628,7 @@ class FirebaseAuthService {
         );
 
         _saveProfileToDb(email, {
-          'displayName': displayName,
+          'displayName': finalName,
           'birthDate': birthDate,
           'gender': gender,
           'lastLogin': DateTime.now().toIso8601String(),
@@ -491,13 +673,33 @@ class FirebaseAuthService {
     final savedProfile = profiles[clean] as Map<String, dynamic>?;
     final bool isNewUser = savedProfile == null;
 
-    final birthDate = savedProfile?['birthDate'] ?? '';
-    final gender = savedProfile?['gender'] ?? '';
+    String birthDate = savedProfile?['birthDate'] ?? '';
+    String gender = savedProfile?['gender'] ?? '';
+    String finalName = savedProfile?['displayName'] ?? name;
+
+    if (birthDate.isEmpty || gender.isEmpty) {
+      final dbData = await fetchProfileFromDatabase(email: clean);
+      if (dbData != null) {
+        if ((dbData['birthDate'] as String?)?.isNotEmpty == true) {
+          birthDate = dbData['birthDate'] as String;
+        }
+        if ((dbData['gender'] as String?)?.isNotEmpty == true) {
+          gender = dbData['gender'] as String;
+        }
+        if ((dbData['displayName'] as String?)?.isNotEmpty == true) {
+          finalName = dbData['displayName'] as String;
+        }
+      }
+    }
+
+    if (birthDate.isNotEmpty && gender.isNotEmpty) {
+      GoogleAuthPlatformHelper.setProfileUpdated(true);
+    }
 
     final user = UserModel(
       id: 'google_user_${cleanEmail(clean)}',
       email: clean,
-      displayName: savedProfile?['displayName'] ?? name,
+      displayName: finalName,
       birthDate: birthDate,
       gender: gender,
       idToken: idToken ?? 'google_token_${DateTime.now().millisecondsSinceEpoch}',
@@ -506,7 +708,7 @@ class FirebaseAuthService {
     );
 
     _saveProfileToDb(clean, {
-      'displayName': savedProfile?['displayName'] ?? name,
+      'displayName': finalName,
       'birthDate': birthDate,
       'gender': gender,
       'lastLogin': DateTime.now().toIso8601String(),
@@ -610,11 +812,36 @@ class FirebaseAuthService {
     // Load saved profile data
     final profiles = _loadProfilesDb();
     final savedProfile = profiles[cleanEmail] as Map<String, dynamic>?;
-    final birthDate = savedProfile?['birthDate'] as String? ?? '';
-    final gender = savedProfile?['gender'] as String? ?? '';
-    final displayName = (savedProfile?['displayName'] as String?)?.isNotEmpty == true
+    String birthDate = savedProfile?['birthDate'] as String? ?? '';
+    String gender = savedProfile?['gender'] as String? ?? '';
+    String displayName = (savedProfile?['displayName'] as String?)?.isNotEmpty == true
         ? savedProfile!['displayName'] as String
         : (data['displayName'] as String? ?? cleanEmail.split('@').first);
+
+    if (birthDate.isEmpty || gender.isEmpty) {
+      final dbData = await fetchProfileFromDatabase(email: cleanEmail, userId: localId);
+      if (dbData != null) {
+        if ((dbData['birthDate'] as String?)?.isNotEmpty == true) {
+          birthDate = dbData['birthDate'] as String;
+        }
+        if ((dbData['gender'] as String?)?.isNotEmpty == true) {
+          gender = dbData['gender'] as String;
+        }
+        if ((dbData['displayName'] as String?)?.isNotEmpty == true) {
+          displayName = dbData['displayName'] as String;
+        }
+      }
+    }
+
+    if (birthDate.isNotEmpty && gender.isNotEmpty) {
+      GoogleAuthPlatformHelper.setProfileUpdated(true);
+      _saveProfileToDb(cleanEmail, {
+        'displayName': displayName,
+        'birthDate': birthDate,
+        'gender': gender,
+        'lastLogin': DateTime.now().toIso8601String(),
+      });
+    }
 
     final user = UserModel(
       id: localId,
@@ -687,6 +914,7 @@ class FirebaseAuthService {
       currentData['password'] = password.trim();
     }
     _saveProfileToDb(email, currentData);
+    GoogleAuthPlatformHelper.setProfileUpdated(true);
 
     _persistSession(updated);
     return updated;
@@ -738,11 +966,30 @@ class FirebaseAuthService {
     final profiles = _loadProfilesDb();
     final savedProfile = profiles[cleanEmail] as Map<String, dynamic>?;
 
-    final birthDate = savedProfile?['birthDate'] as String? ?? '';
-    final gender = savedProfile?['gender'] as String? ?? '';
-    final finalName = (savedProfile?['displayName'] as String?)?.isNotEmpty == true
+    String birthDate = savedProfile?['birthDate'] as String? ?? '';
+    String gender = savedProfile?['gender'] as String? ?? '';
+    String finalName = (savedProfile?['displayName'] as String?)?.isNotEmpty == true
         ? savedProfile!['displayName'] as String
         : name;
+
+    if (birthDate.isEmpty || gender.isEmpty) {
+      final dbData = await fetchProfileFromDatabase(email: cleanEmail, userId: localId);
+      if (dbData != null) {
+        if ((dbData['birthDate'] as String?)?.isNotEmpty == true) {
+          birthDate = dbData['birthDate'] as String;
+        }
+        if ((dbData['gender'] as String?)?.isNotEmpty == true) {
+          gender = dbData['gender'] as String;
+        }
+        if ((dbData['displayName'] as String?)?.isNotEmpty == true) {
+          finalName = dbData['displayName'] as String;
+        }
+      }
+    }
+
+    if (birthDate.isNotEmpty && gender.isNotEmpty) {
+      GoogleAuthPlatformHelper.setProfileUpdated(true);
+    }
 
     final user = UserModel(
       id: localId.isNotEmpty ? localId : 'google_$cleanEmail',
@@ -801,6 +1048,13 @@ class AuthNotifier extends StateNotifier<UserModel?> {
 
   void setLoggedInUser(UserModel user) {
     state = user;
+    if (user.birthDate.isEmpty || user.gender.isEmpty) {
+      _service.syncFromRemoteDatabase(user).then((enriched) {
+        if (enriched != null) {
+          state = enriched;
+        }
+      });
+    }
   }
 
   Future<UserModel> signUp({

@@ -8,24 +8,24 @@
         <div class="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-wider">
             <span>Admin Console</span>
             <span>/</span>
-            <span>Telemetri Aplikasi Mobile</span>
+            <span><?= service('language')->getLocale() === 'id' ? 'Telemetri Aplikasi Mobile' : 'Mobile Application Telemetry' ?></span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Log Percakapan & Rekomendasi</span>
+            <span class="text-red-600 font-bold"><?= service('language')->getLocale() === 'id' ? 'Log Percakapan & Rekomendasi' : 'Conversation & Recommendation Logs' ?></span>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-2.5">
-            Log Penggunaan Mobile &amp; AI Analytics
+            <?= lang('Admin.analytics_title') ?>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-300">
-                DATABASE LIVE
+                <?= lang('Admin.analytics_badge') ?>
             </span>
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
-            Merekam seluruh interaksi curhatan emosi, input suara, analisis suasana hati, dan rekomendasi tempat makan (maksimal radius 10 km) dari aplikasi mobile Flutter.
+            <?= lang('Admin.analytics_desc') ?>
         </p>
     </div>
     <div class="flex items-center gap-2">
         <span class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-white text-slate-700 border border-slate-200 shadow-xs flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Engine: Gemini 2.5 Flash
+            <?= lang('Admin.analytics_engine_badge') ?>
         </span>
     </div>
 </div>
@@ -34,28 +34,28 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-xl p-4 border border-red-100 shadow-xs border-t-4 border-t-red-600">
         <div class="flex items-center justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Total Sesi Mobile</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= lang('Admin.analytics_kpi_total') ?></span>
             <span class="p-1 rounded bg-red-50 text-red-600">
                 <span class="material-symbols-outlined text-[18px]">phone_android</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold font-mono text-slate-900"><?= $totalSessions ?></span>
-            <span class="text-xs text-slate-500">kali curhat</span>
+            <span class="text-xs text-slate-500"><?= lang('Admin.analytics_kpi_total_sub') ?></span>
         </div>
-        <p class="mt-2 text-[11px] text-slate-400">Tersimpan di tabel Supabase <code class="font-mono text-red-600 font-semibold">mood_sessions</code></p>
+        <p class="mt-2 text-[11px] text-slate-400">Supabase: <code class="font-mono text-red-600 font-semibold">mood_sessions</code></p>
     </div>
 
     <div class="bg-white rounded-xl p-4 border border-red-100 shadow-xs border-t-4 border-t-emerald-600">
         <div class="flex items-center justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Sesi Hari Ini</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= lang('Admin.analytics_kpi_today') ?></span>
             <span class="p-1 rounded bg-emerald-50 text-emerald-600">
                 <span class="material-symbols-outlined text-[18px]">today</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold font-mono text-slate-900"><?= $todaySessions ?></span>
-            <span class="text-xs text-slate-500">interaksi hari ini</span>
+            <span class="text-xs text-slate-500"><?= lang('Admin.analytics_kpi_today_sub') ?></span>
         </div>
         <p class="mt-2 text-[11px] text-emerald-600 font-medium flex items-center gap-1">
             <span class="material-symbols-outlined text-[14px]">bolt</span> Real-time streaming
@@ -64,21 +64,21 @@
 
     <div class="bg-white rounded-xl p-4 border border-red-100 shadow-xs border-t-4 border-t-amber-500">
         <div class="flex items-center justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Variasi Sentimen</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= lang('Admin.analytics_kpi_moods') ?></span>
             <span class="p-1 rounded bg-amber-50 text-amber-600">
                 <span class="material-symbols-outlined text-[18px]">psychology</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold font-mono text-slate-900"><?= count($sentimentCounts) ?></span>
-            <span class="text-xs text-slate-500">mood terdeteksi</span>
+            <span class="text-xs text-slate-500"><?= lang('Admin.analytics_kpi_moods_sub') ?></span>
         </div>
-        <p class="mt-2 text-[11px] text-slate-400">Analisis NLP bahasa Indonesia</p>
+        <p class="mt-2 text-[11px] text-slate-400">Gemini NLP Agent Engine</p>
     </div>
 
     <div class="bg-white rounded-xl p-4 border border-red-100 shadow-xs border-t-4 border-t-indigo-600">
         <div class="flex items-center justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Area Populer</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= lang('Admin.analytics_kpi_area') ?></span>
             <span class="p-1 rounded bg-indigo-50 text-indigo-600">
                 <span class="material-symbols-outlined text-[18px]">location_on</span>
             </span>
@@ -88,7 +88,7 @@
                 <?= !empty($cityCounts) ? esc(array_key_first($cityCounts)) : 'Jabodetabek' ?>
             </span>
         </div>
-        <p class="mt-2 text-[11px] text-indigo-600 font-medium">Radius ketat &le; 10.0 km</p>
+        <p class="mt-2 text-[11px] text-indigo-600 font-medium"><?= lang('Admin.analytics_kpi_radius') ?></p>
     </div>
 </div>
 
@@ -97,9 +97,9 @@
     <div class="flex items-center justify-between mb-3">
         <h2 class="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px] text-red-600">sentiment_satisfied</span>
-            Distribusi Sentimen Terdeteksi di Mobile
+            <?= lang('Admin.analytics_mood_distribution') ?>
         </h2>
-        <span class="text-[11px] font-mono text-slate-400">Terbanyak &rarr; Terendah</span>
+        <span class="text-[11px] font-mono text-slate-400"><?= lang('Admin.analytics_mood_order') ?></span>
     </div>
     <div class="flex flex-wrap gap-2">
         <?php foreach ($sentimentCounts as $moodText => $count): ?>
@@ -135,9 +135,9 @@
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] text-emerald-600">smartphone</span>
-                Sistem Operasi (OS)
+                <?= lang('Admin.analytics_os_distribution') ?>
             </h3>
-            <span class="text-[10px] font-mono text-slate-400"><?= $activeDevicesCount ?> Perangkat</span>
+            <span class="text-[10px] font-mono text-slate-400"><?= $activeDevicesCount ?></span>
         </div>
         <?php if (empty($osCounts)): ?>
             <p class="text-xs text-slate-400 italic py-2">Belum ada data OS tercatat.</p>
@@ -172,12 +172,12 @@
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] text-blue-600">devices</span>
-                Model Perangkat Teratas
+                <?= lang('Admin.analytics_top_devices') ?>
             </h3>
-            <span class="text-[10px] font-mono text-slate-400"><?= count($deviceCounts) ?> Tipe</span>
+            <span class="text-[10px] font-mono text-slate-400"><?= count($deviceCounts) ?> <?= service('language')->getLocale() === 'id' ? 'Tipe' : 'Types' ?></span>
         </div>
         <?php if (empty($deviceCounts)): ?>
-            <p class="text-xs text-slate-400 italic py-2">Belum ada data model perangkat.</p>
+            <p class="text-xs text-slate-400 italic py-2"><?= lang('Admin.no_data') ?></p>
         <?php else: ?>
             <div class="space-y-2.5">
                 <?php foreach (array_slice($deviceCounts, 0, 5, true) as $devModel => $cnt): 
@@ -188,7 +188,7 @@
                             <span class="font-semibold text-slate-800 truncate max-w-[170px]" title="<?= esc($devModel) ?>">
                                 <?= esc($devModel) ?>
                             </span>
-                            <span class="font-mono font-bold text-slate-600"><?= $cnt ?> device</span>
+                            <span class="font-mono font-bold text-slate-600"><?= $cnt ?></span>
                         </div>
                         <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                             <div class="h-full bg-blue-600 rounded-full" style="width: <?= $percent ?>%"></div>
@@ -204,12 +204,12 @@
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] text-purple-600">deployed_code</span>
-                Versi Aplikasi Mobile
+                <?= lang('Admin.analytics_app_versions') ?>
             </h3>
-            <span class="text-[10px] font-mono text-emerald-600 font-bold">Build Aktif</span>
+            <span class="text-[10px] font-mono text-emerald-600 font-bold"><?= lang('Admin.analytics_build_active') ?></span>
         </div>
         <?php if (empty($appVersionCounts)): ?>
-            <p class="text-xs text-slate-400 italic py-2">Belum ada data versi aplikasi.</p>
+            <p class="text-xs text-slate-400 italic py-2"><?= lang('Admin.no_data') ?></p>
         <?php else: ?>
             <div class="space-y-2.5">
                 <?php foreach ($appVersionCounts as $appVer => $cnt): 
@@ -238,14 +238,14 @@
         <div>
             <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <span class="material-symbols-outlined text-[18px] text-red-600">table_rows</span>
-                Daftar Riwayat Sesi Percakapan Mobile (Terkini)
+                <?= lang('Admin.analytics_table_title') ?>
             </h2>
-            <p class="text-[11px] text-slate-500">Klik "Detail AI" pada tiap baris untuk melihat kuliner, tempat makan, serta mitra voucher yang disarankan AI.</p>
+            <p class="text-[11px] text-slate-500"><?= lang('Admin.analytics_table_sub') ?></p>
         </div>
         <div class="flex items-center gap-2.5 flex-1 max-w-sm justify-end">
             <div class="relative w-full">
                 <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-slate-400">search</span>
-                <input type="text" id="logSearchInput" placeholder="Cari curhatan, mood, session ID, atau kota..." 
+                <input type="text" id="logSearchInput" placeholder="<?= esc(lang('Admin.analytics_search_placeholder')) ?>" 
                        class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
                 <button id="clearLogSearchBtn" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     <span class="material-symbols-outlined text-[14px]">cancel</span>
@@ -258,12 +258,12 @@
         <table class="w-full text-left text-xs">
             <thead>
                 <tr class="border-b border-slate-100 bg-slate-50 text-slate-500 font-mono uppercase text-[10px]">
-                    <th class="py-3 px-4">Waktu (WIB)</th>
-                    <th class="py-3 px-4">Curhatan Pengguna (Prompt)</th>
-                    <th class="py-3 px-4">Sentimen Terdeteksi</th>
-                    <th class="py-3 px-4">Kategori Kuliner</th>
-                    <th class="py-3 px-4">Lokasi &amp; Radius</th>
-                    <th class="py-3 px-4 text-center">Aksi / Detail</th>
+                    <th class="py-3 px-4"><?= lang('Admin.analytics_col_time') ?></th>
+                    <th class="py-3 px-4"><?= lang('Admin.analytics_col_prompt') ?></th>
+                    <th class="py-3 px-4"><?= lang('Admin.analytics_col_sentiment') ?></th>
+                    <th class="py-3 px-4"><?= lang('Admin.analytics_col_category') ?></th>
+                    <th class="py-3 px-4"><?= lang('Admin.analytics_col_location') ?></th>
+                    <th class="py-3 px-4 text-center"><?= lang('Admin.analytics_col_action') ?></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -271,7 +271,7 @@
                     <tr>
                         <td colspan="6" class="py-12 text-center text-slate-400">
                             <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">inbox</span>
-                            Belum ada sesi curhat mobile yang tercatat. Lakukan rekomendasi di aplikasi Android untuk menguji.
+                            <?= lang('Admin.analytics_empty') ?>
                         </td>
                     </tr>
                 <?php else: ?>
@@ -382,7 +382,7 @@
                             <td class="py-3 px-4 text-center whitespace-nowrap">
                                 <button type="button" onclick="toggleDetail('detail-<?= $index ?>')" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 font-semibold text-[11px] text-slate-700 transition-colors shadow-2xs">
                                     <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                    Detail AI
+                                    <?= lang('Admin.analytics_btn_view_detail') ?>
                                 </button>
                             </td>
                         </tr>
@@ -395,7 +395,7 @@
                                     <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-2.5 gap-2">
                                         <div class="flex items-center gap-2">
                                             <span class="p-1 rounded bg-red-100 text-red-700 material-symbols-outlined text-[16px]">smart_toy</span>
-                                            <span class="font-bold text-slate-900 text-xs">Hasil Lengkap Rekomendasi AI Gemini</span>
+                                            <span class="font-bold text-slate-900 text-xs"><?= lang('Admin.analytics_modal_detail_title') ?></span>
                                         </div>
                                         <span class="text-[10px] font-mono text-slate-400">Session UUID: <?= esc($s['session_id']) ?></span>
                                     </div>
@@ -405,7 +405,7 @@
                                         <div class="bg-amber-50/60 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
                                             <span class="font-bold block mb-1 flex items-center gap-1 text-amber-800">
                                                 <span class="material-symbols-outlined text-[14px]">psychology</span>
-                                                Alasan / Mood Rationale:
+                                                <?= lang('Admin.analytics_rationale_label') ?>
                                             </span>
                                             <?= esc($rationale) ?>
                                         </div>
@@ -417,7 +417,7 @@
                                         <div class="border border-slate-100 rounded-lg p-3 bg-slate-50/40">
                                             <span class="font-bold text-xs text-slate-800 block mb-2 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-[16px] text-red-600">soup_kitchen</span>
-                                                Menu Comfort Food Disarankan
+                                                <?= lang('Admin.analytics_comfort_foods') ?>
                                             </span>
                                             <?php if (!empty($menus)): ?>
                                                 <div class="space-y-2">
@@ -432,7 +432,7 @@
                                                     <?php endforeach; ?>
                                                 </div>
                                             <?php else: ?>
-                                                <div class="text-xs text-slate-400 italic">Tidak ada rincian menu.</div>
+                                                <div class="text-xs text-slate-400 italic"><?= lang('Admin.analytics_no_menus') ?></div>
                                             <?php endif; ?>
                                         </div>
 
@@ -440,7 +440,7 @@
                                         <div class="border border-slate-100 rounded-lg p-3 bg-slate-50/40">
                                             <span class="font-bold text-xs text-slate-800 block mb-2 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-[16px] text-emerald-600">storefront</span>
-                                                Tempat Makan Terdekat (&le; 10.0 km)
+                                                <?= lang('Admin.analytics_nearby_places') ?>
                                             </span>
                                             <?php if (!empty($places)): ?>
                                                 <div class="space-y-2">
@@ -467,7 +467,7 @@
                                                     <?php endforeach; ?>
                                                 </div>
                                             <?php else: ?>
-                                                <div class="text-xs text-slate-400 italic">Tidak ada tempat makan terdekat.</div>
+                                                <div class="text-xs text-slate-400 italic"><?= lang('Admin.analytics_no_places') ?></div>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -478,7 +478,7 @@
                                             <div class="flex items-center justify-between mb-1">
                                                 <span class="font-bold text-red-800 flex items-center gap-1.5">
                                                     <span class="material-symbols-outlined text-[16px] text-red-600">workspace_premium</span>
-                                                    Mitra Sponsor &amp; Promo Aktif
+                                                    <?= lang('Admin.analytics_sponsored_partner') ?>
                                                 </span>
                                                 <span class="font-mono font-bold text-[10px] bg-red-600 text-white px-2 py-0.5 rounded">
                                                     Diskon <?= esc($sponsor['discount_percentage'] ?? '0') ?>%
@@ -496,7 +496,7 @@
                 <tr id="emptySearchLogRow" class="hidden">
                     <td colspan="6" class="py-12 text-center text-slate-400">
                         <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">search_off</span>
-                        Tidak ada log percakapan yang cocok dengan kata kunci pencarian.
+                        <?= lang('Admin.analytics_empty_search') ?>
                     </td>
                 </tr>
             </tbody>
@@ -506,15 +506,15 @@
     <!-- Pagination Footer -->
     <div id="logPaginationBar" class="p-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2 text-slate-600">
-            <span>Tampilkan</span>
+            <span><?= lang('Admin.analytics_show') ?></span>
             <select id="logPageSizeSelect" class="py-1 px-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold focus:ring-1 focus:ring-red-500">
                 <option value="10" selected>10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
             </select>
-            <span>per halaman</span>
+            <span><?= lang('Admin.analytics_per_page') ?></span>
             <span class="text-slate-300">|</span>
-            <span id="logPageInfoText" class="font-mono text-slate-500">Menampilkan 0 - 0 dari 0 data</span>
+            <span id="logPageInfoText" class="font-mono text-slate-500"></span>
         </div>
 
         <div class="flex items-center gap-1" id="logPaginationButtons">
@@ -563,10 +563,10 @@ document.addEventListener('DOMContentLoaded', function () {
         filteredRows.slice(startIdx, endIdx).forEach(r => r.classList.remove('hidden'));
 
         if (total === 0) {
-            pageInfoText.textContent = 'Menampilkan 0 data';
+            pageInfoText.textContent = '<?= addslashes(lang('Admin.no_data')) ?>';
             if (emptySearchRow) emptySearchRow.classList.remove('hidden');
         } else {
-            pageInfoText.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} log percakapan`;
+            pageInfoText.textContent = '<?= service('language')->getLocale() === 'id' ? 'Menampilkan ' : 'Showing ' ?>' + (startIdx + 1) + ' - ' + endIdx + ' <?= service('language')->getLocale() === 'id' ? 'dari' : 'of' ?> ' + total + ' <?= service('language')->getLocale() === 'id' ? 'log percakapan' : 'conversation logs' ?>';
             if (emptySearchRow) emptySearchRow.classList.add('hidden');
         }
 
@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const prevBtn = document.createElement('button');
         prevBtn.type = 'button';
         prevBtn.className = `px-2 py-1 rounded-lg border text-xs font-semibold ${currentPage === 1 ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-600 border-slate-200 hover:bg-slate-100'}`;
-        prevBtn.innerHTML = '&lsaquo; Prev';
+        prevBtn.innerHTML = '&lsaquo; <?= lang('Admin.pagination_previous') ?>';
         prevBtn.disabled = currentPage === 1;
         prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPagination(); } };
         paginationButtons.appendChild(prevBtn);
@@ -598,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const nextBtn = document.createElement('button');
         nextBtn.type = 'button';
         nextBtn.className = `px-2 py-1 rounded-lg border text-xs font-semibold ${currentPage === totalPages ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-600 border-slate-200 hover:bg-slate-100'}`;
-        nextBtn.innerHTML = 'Next &rsaquo;';
+        nextBtn.innerHTML = '<?= lang('Admin.pagination_next') ?> &rsaquo;';
         nextBtn.disabled = currentPage === totalPages;
         nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderPagination(); } };
         paginationButtons.appendChild(nextBtn);

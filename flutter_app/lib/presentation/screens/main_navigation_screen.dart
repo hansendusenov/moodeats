@@ -6,6 +6,8 @@ import 'package:moodeats_app/core/localization/app_language.dart';
 import 'package:moodeats_app/core/localization/app_strings.dart';
 import 'package:moodeats_app/data/providers/app_providers.dart';
 import 'package:moodeats_app/data/services/firebase_auth_service.dart';
+import 'package:moodeats_app/data/services/location_service.dart';
+import 'package:moodeats_app/presentation/widgets/location_picker_sheet.dart';
 import 'package:moodeats_app/presentation/screens/home/home_screen.dart';
 import 'package:moodeats_app/presentation/screens/roulette/bite_roulette_screen.dart';
 import 'package:moodeats_app/presentation/screens/history/history_screen.dart';
@@ -20,6 +22,7 @@ class MainNavigationScreen extends ConsumerWidget {
     final lang = ref.watch(appLanguageProvider);
     final tr = AppStrings.of(lang);
     final authUser = ref.watch(authUserProvider);
+    final userLocation = ref.watch(userLocationProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 800;
 
@@ -36,7 +39,7 @@ class MainNavigationScreen extends ConsumerWidget {
         // If Desktop: Top Navigation Header (no bottom bar).
         // If Mobile: Standard AppBar handled by inner screens, with BottomNavigationBar.
         appBar: isDesktop
-            ? _buildWebHeader(context, ref, currentTab, tr, lang, authUser)
+            ? _buildWebHeader(context, ref, currentTab, tr, lang, authUser, userLocation)
             : null,
         body: Center(
           child: ConstrainedBox(
@@ -135,6 +138,7 @@ class MainNavigationScreen extends ConsumerWidget {
     AppStrings tr,
     AppLanguage lang,
     UserModel? authUser,
+    UserLocation userLocation,
   ) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(68),
@@ -216,6 +220,51 @@ class MainNavigationScreen extends ConsumerWidget {
                   _buildWebTabItem(ref, 3, currentTab, Icons.person_rounded, tr.navAccount),
 
                   const Spacer(),
+
+                  // Location Badge (Interactive with live GPS, placed to the left of Language Switcher)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => showLocationPickerSheet(
+                      context: context,
+                      ref: ref,
+                      currentLocation: userLocation,
+                      tr: tr,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      constraints: const BoxConstraints(maxWidth: 240),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            userLocation.isGpsAcquired ? Icons.my_location : Icons.location_on,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              userLocation.displayLabel.isEmpty ? tr.detectingLocation : userLocation.displayLabel,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.arrow_drop_down, size: 16, color: AppColors.textSecondary),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
 
                   // Language Switcher
                   InkWell(

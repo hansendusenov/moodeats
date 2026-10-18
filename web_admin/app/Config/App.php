@@ -33,6 +33,8 @@ class App extends BaseConfig
         '192.168.100.114',
         '127.0.0.1',
         'localhost',
+        'moodeats-backend.bloomix.cloud',
+        'moodeats-proxy-r53v6ivp3a-et.a.run.app',
     ];
 
     /**
@@ -124,7 +126,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $supportedLocales = ['en'];
+    public array $supportedLocales = ['en', 'id'];
 
     /**
      * --------------------------------------------------------------------------

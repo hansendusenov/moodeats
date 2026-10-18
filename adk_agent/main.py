@@ -175,7 +175,7 @@ def root():
     return {
         "service": "MoodEats Culinary Intelligence Engine",
         "status": "online",
-        "model": "gemini-2.5-flash",
+        "model": settings.gemini_model,
         "pdp_compliance": "UU PDP No. 27/2022 Enabled",
         "api_docs": "/docs",
     }
@@ -186,7 +186,8 @@ def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "gemini_api": bool(settings.google_gemini_api_key),
+        "gemini_api": bool(settings.google_gemini_api_key or settings.gemini_api_key),
+        "gemini_model": settings.gemini_model,
         "places_api": bool(settings.google_places_api_key),
         "db_host": settings.supabase_db_host,
     }
@@ -337,20 +338,15 @@ def get_session_history(
                     # Filter out unlinked sessions
                     where_clauses.append("(is_unlinked = FALSE OR is_unlinked IS NULL)")
 
-                if start_date == "ALL":
-                    # Explicitly requested all history without date filtering
-                    pass
-                elif start_date and end_date:
-                    where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date >= %s::date")
-                    params.append(start_date)
-                    where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date <= %s::date")
-                    params.append(end_date)
-                elif start_date:
-                    where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date = %s::date")
-                    params.append(start_date)
-                else:
-                    # Default: Hari ini (Today) in WIB (Asia/Jakarta)
-                    where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')::date")
+                if start_date and start_date != "ALL":
+                    if end_date:
+                        where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date >= %s::date")
+                        params.append(start_date)
+                        where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date <= %s::date")
+                        params.append(end_date)
+                    else:
+                        where_clauses.append("(created_at AT TIME ZONE 'Asia/Jakarta')::date = %s::date")
+                        params.append(start_date)
 
                 where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
 
@@ -501,9 +497,9 @@ def sync_user_profile(payload: UserSyncRequest):
                     ON CONFLICT (id) DO UPDATE SET
                         display_name = EXCLUDED.display_name,
                         email = EXCLUDED.email,
-                        phone = COALESCE(EXCLUDED.phone, user_profiles.phone),
-                        gender = COALESCE(EXCLUDED.gender, user_profiles.gender),
-                        birth_date = COALESCE(EXCLUDED.birth_date, user_profiles.birth_date),
+                        phone = CASE WHEN EXCLUDED.phone IS NOT NULL AND EXCLUDED.phone <> '' THEN EXCLUDED.phone ELSE user_profiles.phone END,
+                        gender = CASE WHEN EXCLUDED.gender IS NOT NULL AND EXCLUDED.gender <> '' THEN EXCLUDED.gender ELSE user_profiles.gender END,
+                        birth_date = CASE WHEN EXCLUDED.birth_date IS NOT NULL AND EXCLUDED.birth_date <> '' THEN EXCLUDED.birth_date ELSE user_profiles.birth_date END,
                         device_model = COALESCE(EXCLUDED.device_model, user_profiles.device_model),
                         device_os = COALESCE(EXCLUDED.device_os, user_profiles.device_os),
                         app_version = COALESCE(EXCLUDED.app_version, user_profiles.app_version),
@@ -540,6 +536,75 @@ def sync_user_profile(payload: UserSyncRequest):
     except Exception as e:
         logger.error(f"Failed to sync user profile: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/users/profile")
+def get_user_profile_endpoint(
+    user_id: Optional[str] = Query(default=None),
+    email: Optional[str] = Query(default=None),
+):
+    """
+    Fetches user profile (birth_date, gender, display_name, preferences) from database.
+    Used by mobile and web clients to populate user state on login.
+    """
+    if not user_id and not email:
+        raise HTTPException(status_code=400, detail="user_id atau email diperlukan")
+
+    norm_email = email.strip().lower() if email else None
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                if user_id and norm_email:
+                    cur.execute(
+                        """
+                        SELECT id, display_name, email, phone, gender, birth_date, is_halal_only, dietary_type, allergies
+                        FROM user_profiles
+                        WHERE (id = %s OR LOWER(email) = %s) AND status != 'banned'
+                        ORDER BY updated_at DESC LIMIT 1;
+                        """,
+                        (user_id, norm_email),
+                    )
+                elif user_id:
+                    cur.execute(
+                        """
+                        SELECT id, display_name, email, phone, gender, birth_date, is_halal_only, dietary_type, allergies
+                        FROM user_profiles
+                        WHERE id = %s AND status != 'banned';
+                        """,
+                        (user_id,),
+                    )
+                else:
+                    cur.execute(
+                        """
+                        SELECT id, display_name, email, phone, gender, birth_date, is_halal_only, dietary_type, allergies
+                        FROM user_profiles
+                        WHERE LOWER(email) = %s AND status != 'banned'
+                        ORDER BY updated_at DESC LIMIT 1;
+                        """,
+                        (norm_email,),
+                    )
+                row = cur.fetchone()
+                if not row:
+                    return {"status": "not_found", "profile": None}
+
+                return {
+                    "status": "success",
+                    "profile": {
+                        "id": row[0],
+                        "display_name": row[1] or "",
+                        "email": row[2] or "",
+                        "phone": row[3] or "",
+                        "gender": row[4] or "",
+                        "birth_date": str(row[5]) if row[5] else "",
+                        "is_halal_only": bool(row[6]) if row[6] is not None else False,
+                        "dietary_type": row[7] or "none",
+                        "allergies": row[8] or [],
+                    },
+                }
+    except Exception as e:
+        logger.error(f"Error fetching user profile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.post("/api/v1/users/delete-request")

@@ -1,6 +1,6 @@
 """
 MoodEats ADK Agent - Master Autonomous Culinary Intelligence Agent
-Implements PRD Section 6 & 7: Gemini Flash 2.5 + Anti-Injection + Temporal Context + Places + Vouchers.
+Implements PRD Section 6 & 7: Gemini Flash Lite + Anti-Injection + Temporal Context + Places + Vouchers.
 """
 
 import json
@@ -14,12 +14,51 @@ from adk_agent.agent.system_prompt import MOODEATS_SYSTEM_INSTRUCTION
 from adk_agent.agent.output_schema import GeminiMoodAnalysisSchema
 from adk_agent.agent.tools.places_resolver import PlacesResolver
 from adk_agent.agent.tools.voucher_manager import VoucherManager
+import re
+
+
+def _is_english(text: str) -> bool:
+    if not text:
+        return False
+    lower = f" {text.lower()} "
+    en_words = [
+        " i ", "i'm", "im ", "my ", "me ", "want", "craving", "need", "feel", "feeling",
+        "hungry", "tired", "sad", "happy", "stress", "stressed", "cold", "warm", "hot",
+        "good", "bad", "eat", "food", "late", "work", "night", "dinner", "lunch", "breakfast",
+        "something", "recommend", "please", "soup", "coffee"
+    ]
+    return any(w in lower for w in en_words)
+
+
+def _sanitize_badge_for_english(badge: str) -> str:
+    b_lower = badge.lower()
+    if "comfort food malam" in b_lower or "kuliner malam" in b_lower:
+        return "Late-Night Comfort Food"
+    if "kuah hangat" in b_lower:
+        return "Warm Broth"
+    if "makan malam" in b_lower:
+        return "Cozy Dinner"
+    if "makan siang" in b_lower:
+        return "Hearty Lunch"
+    if "sarapan" in b_lower:
+        return "Morning Breakfast"
+    badge = re.sub(r'\bmalam\b', 'Late-Night', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bsiang\b', 'Lunch', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bpagi\b', 'Morning', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bhangat\b', 'Warm', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bkuah\b', 'Broth', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bpedas\b', 'Spicy', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bmanis\b', 'Sweet', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\brempah\b', 'Spiced', badge, flags=re.IGNORECASE)
+    badge = re.sub(r'\bkuliner\b', 'Cuisine', badge, flags=re.IGNORECASE)
+    return badge.strip()
 
 
 class MoodEatsAgent:
     def __init__(self):
         self.settings = get_settings()
-        self.client = genai.Client(api_key=self.settings.google_gemini_api_key)
+        api_key = self.settings.google_gemini_api_key or self.settings.gemini_api_key
+        self.client = genai.Client(api_key=api_key)
         self.places_resolver = PlacesResolver()
         self.voucher_manager = VoucherManager()
 
@@ -59,10 +98,11 @@ class MoodEatsAgent:
             context_lines.append(f"Alergi / Pantangan Makanan: {', '.join(allergies)} (STRICT: Hindari bahan-bahan ini sama sekali).")
         if only_open_now:
             context_lines.append("Filter Operasional: HANYA RESTORAN YANG SEDANG BUKA SEKARANG (Pastikan restoran/tempat makan beroperasi pada jam ini).")
+        context_lines.append("Deteksi Bahasa Input: Perhatikan bahasa 'Curhatan / Input Pengguna'. Jika berbahasa Inggris, field detected_mood, mood_explanation, food_categories, dan zero_results_home_recipes WAJIB ditulis dalam Bahasa Inggris. Jika bahasa Indonesia, gunakan Bahasa Indonesia.")
 
         full_prompt = "\n".join(context_lines)
 
-        # Gemini 2.5 Flash call with strict JSON Schema
+        # Gemini Flash Lite call with strict JSON Schema
         config = types.GenerateContentConfig(
             system_instruction=MOODEATS_SYSTEM_INSTRUCTION,
             temperature=0.7,
@@ -71,12 +111,19 @@ class MoodEatsAgent:
         )
 
         response = self.client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=self.settings.gemini_model,
             contents=full_prompt,
             config=config,
         )
 
         analysis = json.loads(response.text)
+
+        # Sanitize language purity if prompt was in English
+        if _is_english(prompt):
+            if "food_categories" in analysis and isinstance(analysis["food_categories"], list):
+                analysis["food_categories"] = [_sanitize_badge_for_english(c) for c in analysis["food_categories"]]
+            if "detected_mood" in analysis and isinstance(analysis["detected_mood"], str):
+                analysis["detected_mood"] = _sanitize_badge_for_english(analysis["detected_mood"])
 
         # 3. Guardrail check (PRD 7.1)
         if not analysis.get("is_relevant", True):
@@ -168,7 +215,7 @@ class MoodEatsAgent:
 
         try:
             response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=self.settings.gemini_model,
                 contents=[image_part, prompt_instruction],
             )
             detected_text = response.text.strip().strip('"').strip("'")

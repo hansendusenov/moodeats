@@ -141,14 +141,18 @@ class PlaceModel {
         ? Map<String, dynamic>.from(json['action_links'] as Map)
         : <String, dynamic>{};
 
+    final name = json['name']?.toString() ?? 'Tempat Makan';
+    final category = json['category']?.toString() ?? 'Kuliner';
+    final photoUrl = resolvePhotoUrl(json['photo_url']?.toString(), name, category);
+
     return PlaceModel(
       id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? 'Tempat Makan',
-      category: json['category']?.toString() ?? 'Kuliner',
+      name: name,
+      category: category,
       address: json['address']?.toString() ?? '',
       distanceKm: parsedDistance,
       rating: parsedRating,
-      photoUrl: json['photo_url']?.toString() ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+      photoUrl: photoUrl,
       moodBadge: json['mood_badge']?.toString() ?? 'Rekomendasi',
       priceRange: json['price_range']?.toString() ?? 'Rp 20.000 - Rp 45.000',
       isSponsored: json['is_sponsored'] == true || json['is_sponsored'] == 1,
@@ -157,6 +161,49 @@ class PlaceModel {
       voucher: VoucherModel.fromJson(voucherMap),
       actionLinks: ActionLinksModel.fromJson(actionLinksMap),
     );
+  }
+
+  static String resolvePhotoUrl(String? rawUrl, String name, String category) {
+    if (rawUrl != null &&
+        rawUrl.isNotEmpty &&
+        !rawUrl.contains('photo-1546069901-ba9599a7e63c') &&
+        !rawUrl.contains('photo-1555396273-367ea4eb4db5')) {
+      return rawUrl;
+    }
+    final lower = '$name $category'.toLowerCase();
+    if (lower.contains('bakso') || lower.contains('meatball')) {
+      return 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600';
+    }
+    if (lower.contains('soto') || lower.contains('soup') || lower.contains('kuah') || lower.contains('sop')) {
+      return 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600';
+    }
+    if (lower.contains('sate') || lower.contains('satay') || lower.contains('panggang') || lower.contains('bakar')) {
+      return 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600';
+    }
+    if (lower.contains('kopi') || lower.contains('coffee') || lower.contains('cafe') || lower.contains('kafe') || lower.contains('kopitiam')) {
+      return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600';
+    }
+    if (lower.contains('ayam') || lower.contains('chicken') || lower.contains('geprek') || lower.contains('bebek')) {
+      return 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600';
+    }
+    if (lower.contains('nasi') || lower.contains('rice') || lower.contains('padang') || lower.contains('warteg')) {
+      return 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600';
+    }
+    if (lower.contains('burger') || lower.contains('western') || lower.contains('pizza') || lower.contains('pasta')) {
+      return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600';
+    }
+    if (lower.contains('mie') || lower.contains('noodle') || lower.contains('ramen') || lower.contains('kwetiau')) {
+      return 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=600';
+    }
+    if (lower.contains('manis') || lower.contains('dessert') || lower.contains('cake') || lower.contains('boba') || lower.contains('es ')) {
+      return 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600';
+    }
+    if (lower.contains('seafood') || lower.contains('ikan') || lower.contains('udang')) {
+      return 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600';
+    }
+    return rawUrl?.isNotEmpty == true
+        ? rawUrl!
+        : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600';
   }
 }
 

@@ -12,6 +12,7 @@ $routes->get('/', function() {
 $routes->get('login', 'Auth::login');
 $routes->post('login', 'Auth::attemptLogin');
 $routes->get('logout', 'Auth::logout');
+$routes->get('lang/(:segment)', 'Language::switch/$1');
 
 // Protected Backoffice Routes (Auth Filter)
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
@@ -60,6 +61,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('users/toggle-ban/(:segment)', 'Users::toggleBan/$1');
     $routes->post('users/inject-voucher', 'Users::injectVoucher');
     $routes->get('users/vouchers/(:segment)', 'Users::userVouchers/$1');
+    $routes->get('users/detail/(:segment)', 'Users::detail/$1');
     $routes->get('users/revoke-voucher/(:segment)', 'Users::revokeVoucher/$1');
     $routes->get('users/crypto-shred/(:segment)', 'Users::cryptoShred/$1');
     $routes->get('users/delete/(:segment)', 'Users::delete/$1');

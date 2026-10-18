@@ -6,26 +6,26 @@
 <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
     <div>
         <div class="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-wider">
-            <span>Admin Console</span>
+            <span><?= esc(lang('Admin.brand_name')) ?></span>
             <span>/</span>
-            <span>Pelanggan</span>
+            <span><?= esc(lang('Admin.nav_users')) ?></span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Manajemen User &amp; Siklus Hidup PDP</span>
+            <span class="text-red-600 font-bold"><?= esc(lang('Admin.users_badge')) ?></span>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-3">
-            User Management, Status &amp; Siklus Hidup UU PDP
+            <?= esc(lang('Admin.users_title')) ?>
             <?php if ($isPrivileged): ?>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-50 text-amber-800 border border-amber-300">
-                    Mode Forensik: Unmasked PII
+                    <?= esc(lang('Admin.audit_privileged_badge')) ?>
                 </span>
             <?php else: ?>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-50 text-blue-800 border border-blue-300">
-                    Mode UU PDP: PII Dimasking Otomatis
+                    <?= esc(lang('Admin.audit_compliance_badge')) ?>
                 </span>
             <?php endif; ?>
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
-            Kelola profil pengguna, status blokir anti-evasion, masa tenggang penghapusan (30 hari), dan pemutusan relasi sesi (unlinking) kepatuhan UU PDP No. 27/2022.
+            <?= esc(lang('Admin.users_desc')) ?>
         </p>
     </div>
 </div>
@@ -35,7 +35,7 @@
     <!-- Total -->
     <div class="bg-white p-3 rounded-xl border border-red-100 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total User</div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= esc(lang('Admin.users_kpi_total')) ?></div>
             <div class="text-xl font-black text-slate-900 mt-0.5"><?= $totalUsers ?></div>
         </div>
         <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600">
@@ -46,7 +46,7 @@
     <!-- Active -->
     <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Aktif</div>
+            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider"><?= esc(lang('Admin.users_kpi_active')) ?></div>
             <div class="text-xl font-black text-emerald-600 mt-0.5"><?= $activeCount ?></div>
         </div>
         <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
@@ -57,10 +57,10 @@
     <!-- Banned -->
     <div class="bg-white p-3 rounded-xl border border-red-200 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Diblokir</div>
+            <div class="text-[10px] font-bold text-red-600 uppercase tracking-wider"><?= esc(lang('Admin.users_kpi_banned')) ?></div>
             <div class="text-xl font-black text-red-600 mt-0.5"><?= $bannedCount ?></div>
         </div>
-        <div class="w-8 h-8 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600" title="Akun diblokir tidak dapat dianonimkan demi anti-evasion">
+        <div class="w-8 h-8 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600" title="Protected Anti-Evasion">
             <span class="material-symbols-outlined text-[18px]">block</span>
         </div>
     </div>
@@ -68,7 +68,7 @@
     <!-- Dormant (>30d) -->
     <div class="bg-white p-3 rounded-xl border border-amber-100 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Dormant (&gt;30h)</div>
+            <div class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Dormant (&gt;30d)</div>
             <div class="text-xl font-black text-amber-600 mt-0.5"><?= $dormantCount ?></div>
         </div>
         <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
@@ -90,10 +90,10 @@
     <!-- Anonymized (Crypto-Shredded) -->
     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
         <div>
-            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dianonimkan</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider"><?= esc(lang('Admin.users_kpi_anonymized')) ?></div>
             <div class="text-xl font-black text-slate-700 mt-0.5"><?= $anonymizedCount ?></div>
         </div>
-        <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500" title="Telah di crypto-shred dan unlinked">
+        <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500" title="Crypto-shredded & unlinked">
             <span class="material-symbols-outlined text-[18px]">visibility_off</span>
         </div>
     </div>
@@ -106,7 +106,7 @@
         <div class="relative flex-1 min-w-[260px] max-w-md">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
             <input type="text" id="userSearchInput" value="<?= esc($search ?? '') ?>" 
-                   placeholder="Cari nama, email, no. hp, atau preferensi diet..." 
+                   placeholder="<?= esc(lang('Admin.users_search_placeholder')) ?>" 
                    class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
             <button id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined text-[16px]">cancel</span>
@@ -116,13 +116,13 @@
         <!-- Filter Status Buttons -->
         <div class="flex items-center flex-wrap gap-1.5 text-xs">
             <button type="button" onclick="filterStatus('all')" id="filterBtnAll" class="px-2.5 py-1.5 rounded-lg font-semibold text-red-600 bg-red-50 border border-red-200 transition-colors">
-                Semua (<span id="countAll"><?= $totalUsers ?></span>)
+                <?= esc(lang('Admin.filter_all')) ?> (<span id="countAll"><?= $totalUsers ?></span>)
             </button>
             <button type="button" onclick="filterStatus('active')" id="filterBtnActive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Aktif (<span id="countActive"><?= $activeCount ?></span>)
+                <?= esc(lang('Admin.filter_active')) ?> (<span id="countActive"><?= $activeCount ?></span>)
             </button>
             <button type="button" onclick="filterStatus('banned')" id="filterBtnBanned" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Diblokir (<span id="countBanned"><?= $bannedCount ?></span>)
+                <?= esc(lang('Admin.users_status_banned')) ?> (<span id="countBanned"><?= $bannedCount ?></span>)
             </button>
             <button type="button" onclick="filterStatus('dormant')" id="filterBtnDormant" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
                 Dormant (<span id="countDormant"><?= $dormantCount ?></span>)
@@ -131,7 +131,7 @@
                 Grace Period (<span id="countPending"><?= $pendingDeletionCount ?></span>)
             </button>
             <button type="button" onclick="filterStatus('anonymized')" id="filterBtnAnon" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Anonim (<span id="countAnon"><?= $anonymizedCount ?></span>)
+                <?= esc(lang('Admin.users_status_shredded')) ?> (<span id="countAnon"><?= $anonymizedCount ?></span>)
             </button>
         </div>
     </div>
@@ -143,14 +143,14 @@
         <table class="w-full text-left border-collapse text-xs">
             <thead>
                 <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                    <th class="py-3 px-4">Pengguna</th>
-                    <th class="py-3 px-3">Gender &amp; Lahir</th>
-                    <th class="py-3 px-3">Diet &amp; Preferensi</th>
-                    <th class="py-3 px-3">Perangkat &amp; Telemetri</th>
-                    <th class="py-3 px-3 text-center">Status Akun (PDP)</th>
-                    <th class="py-3 px-3 text-center">Voucher Aktif</th>
-                    <th class="py-3 px-3">Terdaftar</th>
-                    <th class="py-3 px-4 text-right">Aksi</th>
+                    <th class="py-3 px-4"><?= esc(lang('Admin.users_col_profile')) ?></th>
+                    <th class="py-3 px-3"><?= esc(lang('Admin.users_detail_gender')) ?> &amp; <?= esc(lang('Admin.users_detail_birth')) ?></th>
+                    <th class="py-3 px-3"><?= esc(lang('Admin.users_col_preferences')) ?></th>
+                    <th class="py-3 px-3"><?= esc(lang('Admin.users_col_device')) ?></th>
+                    <th class="py-3 px-3 text-center"><?= esc(lang('Admin.users_col_status')) ?></th>
+                    <th class="py-3 px-3 text-center"><?= esc(lang('Admin.users_detail_sec_vouchers')) ?></th>
+                    <th class="py-3 px-3"><?= esc(lang('Admin.created_at')) ?></th>
+                    <th class="py-3 px-4 text-right"><?= esc(lang('Admin.actions')) ?></th>
                 </tr>
             </thead>
             <tbody id="userTableBody" class="divide-y divide-slate-100">
@@ -180,12 +180,14 @@
                             
                             <!-- Pengguna & PII Info -->
                             <td class="py-3 px-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 <?= $isBanned ? 'bg-red-100 text-red-700' : ($isAnonymized ? 'bg-slate-200 text-slate-600' : 'bg-red-50 text-red-600') ?>">
+                                <div class="flex items-center gap-3 cursor-pointer group" 
+                                     onclick="openUserDetailModal('<?= esc($u['id']) ?>')"
+                                     title="Klik untuk melihat detail profil pengguna">
+                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 transition-transform group-hover:scale-105 <?= $isBanned ? 'bg-red-100 text-red-700' : ($isAnonymized ? 'bg-slate-200 text-slate-600' : 'bg-red-50 text-red-600') ?>">
                                         <?= strtoupper(substr($u['display_name'] ?? 'U', 0, 1)) ?>
                                     </div>
                                     <div class="min-w-0">
-                                        <div class="font-bold text-slate-900 truncate flex items-center gap-1.5">
+                                        <div class="font-bold text-slate-900 truncate flex items-center gap-1.5 group-hover:text-red-600 transition-colors">
                                             <?= esc($u['display_name'] ?? 'Pengguna') ?>
                                             <?php if ($isBanned): ?>
                                                 <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-red-100 text-red-700 border border-red-200">
@@ -325,6 +327,15 @@
                             <!-- Aksi -->
                             <td class="py-3 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
+                                    <!-- Lihat Detail Pengguna Button -->
+                                    <button type="button" 
+                                            onclick="openUserDetailModal('<?= esc($u['id']) ?>')"
+                                            class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors shadow-2xs"
+                                            title="Lihat Detail Profil Pengguna">
+                                        <span class="material-symbols-outlined text-[15px] text-slate-500">visibility</span>
+                                        <span>Lihat</span>
+                                    </button>
+
                                     <!-- Injeksi Voucher Button -->
                                     <button type="button" 
                                             onclick="openInjectModal('<?= esc($u['id']) ?>', '<?= esc($u['display_name']) ?>', '<?= esc($u['email_display']) ?>', <?= ($isBanned || $isAnonymized) ? 'true' : 'false' ?>)"
@@ -378,15 +389,15 @@
     <!-- Pagination Footer -->
     <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="text-slate-500">
-            Menampilkan <span id="showingStart" class="font-bold text-slate-800">1</span>-<span id="showingEnd" class="font-bold text-slate-800">10</span> dari <span id="showingTotal" class="font-bold text-slate-800"><?= $totalUsers ?></span> pengguna
+            <?= lang('Admin.pagination_showing') ?> <span id="showingStart" class="font-bold text-slate-800">1</span>-<span id="showingEnd" class="font-bold text-slate-800">10</span> <?= lang('Admin.pagination_of') ?> <span id="showingTotal" class="font-bold text-slate-800"><?= $totalUsers ?></span> <?= lang('Admin.pagination_users') ?>
         </div>
         <div class="flex items-center gap-1.5">
             <button type="button" id="prevPageBtn" onclick="changePage(-1)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed">
-                Sebelumnya
+                <?= lang('Admin.pagination_previous') ?>
             </button>
             <div id="pageNumbers" class="flex items-center gap-1"></div>
             <button type="button" id="nextPageBtn" onclick="changePage(1)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed">
-                Berikutnya
+                <?= lang('Admin.pagination_next') ?>
             </button>
         </div>
     </div>
@@ -404,8 +415,8 @@
                     <span class="material-symbols-outlined text-[20px]">add_card</span>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Injeksi Voucher Khusus</h3>
-                    <p class="text-xs text-slate-500">Kirim kupon promo eksklusif ke akun pengguna</p>
+                    <h3 class="text-base font-extrabold text-slate-900"><?= lang('Admin.users_inject_modal_title') ?></h3>
+                    <p class="text-xs text-slate-500"><?= lang('Admin.users_inject_modal_subtitle') ?></p>
                 </div>
             </div>
             <button type="button" onclick="closeInjectModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
@@ -413,13 +424,13 @@
             </button>
         </div>
 
-        <form action="/users/inject-voucher" method="post" class="space-y-4">
+        <form action="<?= site_url('users/inject-voucher') ?>" method="post" class="space-y-4">
             <?= csrf_field() ?>
             <input type="hidden" name="user_id" id="injectUserId" value="">
 
             <div class="p-3 bg-red-50/60 rounded-xl border border-red-100 flex items-center justify-between">
                 <div>
-                    <div class="text-[10px] uppercase font-bold text-red-600">Penerima Voucher</div>
+                    <div class="text-[10px] uppercase font-bold text-red-600"><?= lang('Admin.users_inject_user_target') ?></div>
                     <div class="font-bold text-slate-900 text-xs mt-0.5" id="injectUserName">Pengguna</div>
                     <div class="text-[11px] text-slate-500 font-mono" id="injectUserEmail">email@example.com</div>
                 </div>
@@ -427,10 +438,10 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Mitra Merchant (Opsional)</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1"><?= lang('Admin.users_inject_merchant_target') ?></label>
                 <select name="merchant_id" id="injectMerchantSelect" onchange="onMerchantSelectChanged()"
                         class="w-full text-xs rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
-                    <option value="">-- Voucher Promo Internal MoodEats --</option>
+                    <option value=""><?= lang('Admin.users_inject_merchant_internal') ?></option>
                     <?php foreach ($merchants as $m): ?>
                         <option value="<?= esc($m['id']) ?>" 
                                 data-code="<?= esc($m['voucher_code']) ?>"
@@ -443,30 +454,30 @@
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Kode Voucher</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1"><?= lang('Admin.users_inject_code') ?></label>
                     <input type="text" name="voucher_code" id="injectVoucherCode" placeholder="MISAL: LAPAR20" required
                            class="w-full text-xs font-mono font-bold uppercase rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Masa Berlaku (Jam)</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1"><?= lang('Admin.users_inject_expires_hours') ?></label>
                     <input type="number" name="duration_hours" id="injectDuration" value="24" min="1" max="720" required
                            class="w-full text-xs font-bold rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Diskon</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1"><?= lang('Admin.users_inject_discount_desc') ?></label>
                 <input type="text" name="discount_description" id="injectDiscountDesc" placeholder="Diskon 20% Min. Transaksi 50k" required
                        class="w-full text-xs rounded-lg border border-slate-200 py-2 px-3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button type="button" onclick="closeInjectModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
-                    Batal
+                    <?= lang('Admin.cancel') ?>
                 </button>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm">
                     <span class="material-symbols-outlined text-[16px]">send</span>
-                    Injeksi Voucher Sekarang
+                    <?= lang('Admin.users_inject_btn_send') ?>
                 </button>
             </div>
         </form>
@@ -485,8 +496,8 @@
                     <span class="material-symbols-outlined text-[20px]">confirmation_number</span>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Riwayat Voucher Pengguna</h3>
-                    <p class="text-xs text-slate-500" id="userVouchersSubtitle">Memuat data voucher...</p>
+                    <h3 class="text-base font-extrabold text-slate-900"><?= lang('Admin.users_vouchers_modal_title') ?></h3>
+                    <p class="text-xs text-slate-500" id="userVouchersSubtitle"><?= lang('Admin.users_vouchers_loading') ?></p>
                 </div>
             </div>
             <button type="button" onclick="closeVouchersModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
@@ -496,19 +507,19 @@
 
         <div id="userVouchersLoading" class="py-10 text-center text-slate-400">
             <span class="material-symbols-outlined animate-spin text-[32px] text-red-600">sync</span>
-            <div class="text-xs mt-2">Mengambil riwayat voucher...</div>
+            <div class="text-xs mt-2"><?= lang('Admin.users_vouchers_loading') ?></div>
         </div>
 
         <div id="userVouchersContent" class="hidden max-h-80 overflow-y-auto space-y-2 pr-1">
             <div id="userVouchersList" class="space-y-2"></div>
             <div id="userVouchersEmpty" class="hidden py-8 text-center text-slate-400 text-xs">
-                Pengguna ini belum memiliki riwayat voucher atau kupon aktif.
+                <?= lang('Admin.users_vouchers_empty') ?>
             </div>
         </div>
 
         <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-end">
             <button type="button" onclick="closeVouchersModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
-                Tutup
+                <?= lang('Admin.close') ?>
             </button>
         </div>
     </div>
@@ -527,28 +538,28 @@
                     <span class="material-symbols-outlined text-[22px]">block</span>
                 </div>
                 <div>
-                    <h3 id="banModalTitle" class="text-base font-extrabold text-slate-900">Blokir Akun Pengguna</h3>
-                    <p id="banModalSubtitle" class="text-xs text-slate-500">Tindakan ini akan mencegah pengguna mengakses layanan</p>
+                    <h3 id="banModalTitle" class="text-base font-extrabold text-slate-900"><?= lang('Admin.users_ban_modal_title') ?></h3>
+                    <p id="banModalSubtitle" class="text-xs text-slate-500"><?= lang('Admin.users_ban_modal_sub') ?></p>
                 </div>
             </div>
 
             <p id="banModalMessage" class="text-xs text-slate-600 leading-relaxed">
-                Apakah Anda yakin ingin memblokir akun <strong id="banTargetName">Pengguna</strong>?
+                <?= lang('Admin.users_ban_modal_msg') ?> <strong id="banTargetName">Pengguna</strong>?
             </p>
 
             <div id="banReasonContainer">
-                <label class="block text-xs font-bold text-slate-700 mb-1">Alasan Pemblokiran (Audit Trail PDP)</label>
-                <textarea name="reason" id="banReasonInput" rows="2" placeholder="Pelanggaran ketentuan layanan, spam, penyalahgunaan voucher..."
+                <label class="block text-xs font-bold text-slate-700 mb-1"><?= lang('Admin.users_ban_reason_label') ?></label>
+                <textarea name="reason" id="banReasonInput" rows="2" placeholder="<?= esc(lang('Admin.users_ban_reason_placeholder')) ?>"
                           class="w-full text-xs rounded-lg border border-slate-200 p-2.5 focus:border-red-500 focus:ring-1 focus:ring-red-500"></textarea>
-                <p class="text-[10px] text-slate-400 mt-1">Alasan pemblokiran, SHA-256 email hash, dan tanda tangan telemetri perangkat akan disimpan permanen demi perlindungan anti-evasion.</p>
+                <p class="text-[10px] text-slate-400 mt-1"><?= lang('Admin.users_ban_reason_help') ?></p>
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button type="button" onclick="closeBanModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
-                    Batal
+                    <?= lang('Admin.cancel') ?>
                 </button>
                 <button type="submit" id="banSubmitBtn" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm">
-                    Blokir Akun
+                    <?= lang('Admin.users_ban_submit_btn') ?>
                 </button>
             </div>
         </form>
@@ -566,28 +577,183 @@
                 <span class="material-symbols-outlined text-[22px]">delete_forever</span>
             </div>
             <div>
-                <h3 class="text-base font-extrabold text-slate-900">Crypto-Shred &amp; Hak Penghapusan</h3>
-                <p class="text-xs text-slate-500">Kepatuhan UU PDP No. 27/2022 Pasal 43</p>
+                <h3 class="text-base font-extrabold text-slate-900"><?= lang('Admin.users_shred_modal_title') ?></h3>
+                <p class="text-xs text-slate-500"><?= lang('Admin.users_shred_modal_sub') ?></p>
             </div>
         </div>
         <p class="text-xs text-slate-600 mb-3 leading-relaxed">
-            Apakah Anda yakin ingin menganonimkan akun <strong id="deleteTargetName">Pengguna</strong>?
+            <?= lang('Admin.users_shred_modal_msg') ?> <strong id="deleteTargetName">Pengguna</strong>?
         </p>
         <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 space-y-1 mb-4 leading-relaxed">
             <div class="font-bold flex items-center gap-1 text-amber-900">
-                <span class="material-symbols-outlined text-[16px]">info</span> Mekanisme Perlindungan Metrik:
+                <span class="material-symbols-outlined text-[16px]">info</span> <?= lang('Admin.users_shred_box_title') ?>
             </div>
-            <div>&bull; Seluruh identitas pribadi (nama, email, no. telp, profil) akan di-shred &amp; dianonimkan permanen.</div>
-            <div>&bull; Relasi sesi analitik akan di-unlink (<code class="font-mono bg-amber-100 px-1 rounded">user_id = NULL</code>), memastikan agregat metrik tren makanan mitra tetap akurat dan utuh.</div>
+            <div>&bull; <?= lang('Admin.users_shred_box_p1') ?></div>
+            <div>&bull; <?= lang('Admin.users_shred_box_p2') ?></div>
         </div>
         <div class="flex items-center justify-end gap-2">
             <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
-                Batal
+                <?= lang('Admin.cancel') ?>
             </button>
             <a id="deleteConfirmBtn" href="#" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm">
                 <span class="material-symbols-outlined text-[15px]">verified</span>
-                Ya, Crypto-Shred Akun
+                <?= lang('Admin.users_shred_submit_btn') ?>
             </a>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: LIHAT DETAIL USER (PROFIL, DIET, TELEMETRI & PDP) -->
+<!-- ========================================================================= -->
+<div id="userDetailModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeUserDetailModal()"></div>
+    <div class="relative bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-red-100 z-10 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+            <div class="flex items-center gap-3">
+                <div id="detailUserAvatar" class="w-11 h-11 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center font-bold text-base border border-red-100 shadow-2xs">
+                    U
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-extrabold text-slate-900" id="detailUserName"><?= lang('Admin.loading') ?></h3>
+                        <span id="detailUserBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                            Status
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-xs text-slate-400 font-mono" id="detailUserId">UID: -</span>
+                        <button type="button" onclick="copyDetailUserId()" class="text-slate-400 hover:text-red-600 transition-colors" title="UID">
+                            <span class="material-symbols-outlined text-[13px]">content_copy</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="closeUserDetailModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div id="userDetailLoading" class="py-12 text-center text-slate-400">
+            <span class="material-symbols-outlined animate-spin text-[32px] text-red-600">sync</span>
+            <div class="text-xs mt-2 font-medium"><?= lang('Admin.users_detail_loading') ?></div>
+        </div>
+
+        <div id="userDetailContent" class="hidden overflow-y-auto space-y-4 py-4 pr-1 flex-1">
+            <!-- Section 1: Identitas & Kontak -->
+            <div class="bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/80">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] text-red-600">badge</span>
+                    <?= lang('Admin.users_detail_sec_identity_title') ?>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_email') ?></div>
+                        <div class="font-bold text-slate-800 font-mono mt-0.5 truncate" id="detailUserEmail">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_col_contact') ?></div>
+                        <div class="font-bold text-slate-800 font-mono mt-0.5" id="detailUserPhone">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_gender') ?></div>
+                        <div class="font-bold text-slate-800 mt-0.5" id="detailUserGender">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_birth') ?></div>
+                        <div class="font-bold text-slate-800 font-mono mt-0.5" id="detailUserBirth">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Preferensi Makanan & Diet AI -->
+            <div class="bg-amber-50/40 rounded-xl p-3.5 border border-amber-200/70">
+                <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] text-amber-600">restaurant</span>
+                    <?= lang('Admin.users_detail_sec_diet_title') ?>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                        <div class="text-[10px] text-amber-700/80 font-medium"><?= lang('Admin.users_detail_halal') ?></div>
+                        <div class="mt-1" id="detailUserHalal">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Halal Only</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-amber-700/80 font-medium"><?= lang('Admin.users_detail_diet_type') ?></div>
+                        <div class="font-bold text-slate-800 mt-1 capitalize" id="detailUserDiet">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-amber-700/80 font-medium"><?= lang('Admin.users_detail_budget') ?></div>
+                        <div class="font-bold text-slate-800 mt-1" id="detailUserBudget">-</div>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2.5 border-t border-amber-200/60">
+                    <div class="text-[10px] text-amber-700/80 font-medium mb-1"><?= lang('Admin.users_detail_allergies') ?></div>
+                    <div class="flex flex-wrap gap-1.5" id="detailUserAllergies">
+                        <span class="text-slate-400 text-xs italic"><?= lang('Admin.users_detail_no_allergies') ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Telemetri Perangkat & Anti-Evasion -->
+            <div class="bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/80">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] text-blue-600">devices</span>
+                    <?= lang('Admin.users_detail_sec_device_title') ?>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_device_model') ?></div>
+                        <div class="font-bold text-slate-800 mt-0.5 truncate" id="detailUserDevice">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_os') ?></div>
+                        <div class="font-bold text-slate-800 mt-0.5" id="detailUserOs">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_app_ver') ?></div>
+                        <div class="font-mono font-bold text-blue-700 mt-0.5" id="detailUserAppVersion">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-medium"><?= lang('Admin.users_detail_last_active') ?></div>
+                        <div class="font-mono text-slate-700 mt-0.5 text-[11px]" id="detailUserLastActive">-</div>
+                    </div>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-slate-200 text-[10px] text-slate-400 font-mono truncate" id="detailUserHash">
+                    SHA-256 Hash: -
+                </div>
+            </div>
+
+            <!-- Section 4: Koleksi Voucher -->
+            <div class="bg-red-50/30 rounded-xl p-3.5 border border-red-100">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-[11px] font-bold text-red-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[15px]">confirmation_number</span>
+                        <?= lang('Admin.users_detail_sec_vouchers_title') ?>
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-500" id="detailUserVoucherCount">0</span>
+                </div>
+                <div id="detailUserVoucherList" class="space-y-2 mt-2"></div>
+                <div id="detailUserVoucherEmpty" class="text-xs text-slate-400 italic py-2 text-center">
+                    <?= lang('Admin.users_detail_no_vouchers') ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="pt-3 border-t border-slate-100 shrink-0 flex items-center justify-between gap-2">
+            <button type="button" onclick="closeUserDetailModal()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                <?= lang('Admin.close') ?>
+            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" id="detailModalInjectBtn" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm">
+                    <span class="material-symbols-outlined text-[15px]">add_card</span>
+                    <span><?= lang('Admin.users_btn_inject') ?></span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -725,7 +891,7 @@
     // Modal Injeksi Voucher
     function openInjectModal(userId, userName, userEmail, isDisabled) {
         if (isDisabled) {
-            alert('Tidak dapat menginjeksi voucher ke pengguna yang sedang berstatus BANNED atau telah dianonimkan.');
+            alert('<?= addslashes(lang('Admin.users_inject_alert_blocked')) ?>');
             return;
         }
         document.getElementById('injectUserId').value = userId;
@@ -753,7 +919,7 @@
     // Modal Ban / Unban
     function openBanModal(userId, userName, isCurrentlyBanned) {
         const form = document.getElementById('banForm');
-        form.action = '/users/toggle-ban/' + userId;
+        form.action = '<?= site_url('users/toggle-ban') ?>/' + userId;
         document.getElementById('banTargetName').innerText = userName;
 
         const iconContainer = document.getElementById('banModalIcon');
@@ -766,23 +932,23 @@
             // Unban mode
             iconContainer.className = 'w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200 shrink-0';
             iconContainer.innerHTML = '<span class="material-symbols-outlined text-[22px]">lock_open</span>';
-            title.innerText = 'Buka Blokir (Unban)';
-            subtitle.innerText = 'Pulihkan akses akun pengguna ke aplikasi MoodEats';
-            document.getElementById('banModalMessage').innerHTML = 'Apakah Anda yakin ingin mengaktifkan kembali akun <strong>' + userName + '</strong>?';
+            title.innerText = '<?= addslashes(lang('Admin.users_unban_modal_title')) ?>';
+            subtitle.innerText = '<?= addslashes(lang('Admin.users_unban_modal_sub')) ?>';
+            document.getElementById('banModalMessage').innerHTML = '<?= addslashes(lang('Admin.users_unban_modal_msg')) ?> <strong>' + userName + '</strong>?';
             reasonContainer.classList.add('hidden');
             submitBtn.className = 'px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm';
-            submitBtn.innerText = 'Buka Blokir Sekarang';
+            submitBtn.innerText = '<?= addslashes(lang('Admin.users_unban_submit_btn')) ?>';
         } else {
             // Ban mode
             iconContainer.className = 'w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 shrink-0';
             iconContainer.innerHTML = '<span class="material-symbols-outlined text-[22px]">block</span>';
-            title.innerText = 'Blokir Akun Pengguna';
-            subtitle.innerText = 'Tindakan ini akan mencegah pengguna mengakses layanan';
-            document.getElementById('banModalMessage').innerHTML = 'Apakah Anda yakin ingin memblokir akun <strong>' + userName + '</strong>?';
+            title.innerText = '<?= addslashes(lang('Admin.users_ban_modal_title')) ?>';
+            subtitle.innerText = '<?= addslashes(lang('Admin.users_ban_modal_sub')) ?>';
+            document.getElementById('banModalMessage').innerHTML = '<?= addslashes(lang('Admin.users_ban_modal_msg')) ?> <strong>' + userName + '</strong>?';
             reasonContainer.classList.remove('hidden');
             document.getElementById('banReasonInput').value = '';
             submitBtn.className = 'px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm';
-            submitBtn.innerText = 'Blokir Akun';
+            submitBtn.innerText = '<?= addslashes(lang('Admin.users_ban_submit_btn')) ?>';
         }
 
         document.getElementById('banModal').classList.remove('hidden');
@@ -795,7 +961,7 @@
     // Modal Delete User
     function openDeleteModal(userId, userName) {
         document.getElementById('deleteTargetName').innerText = userName;
-        document.getElementById('deleteConfirmBtn').href = '/users/delete/' + userId;
+        document.getElementById('deleteConfirmBtn').href = '<?= site_url('users/delete') ?>/' + userId;
         document.getElementById('deleteUserModal').classList.remove('hidden');
     }
 
@@ -812,7 +978,7 @@
         const emptyMsg = document.getElementById('userVouchersEmpty');
         const subtitle = document.getElementById('userVouchersSubtitle');
 
-        subtitle.innerText = 'Daftar kupon yang dimiliki oleh ' + userName;
+        subtitle.innerText = '<?= addslashes(lang('Admin.users_vouchers_modal_title')) ?> - ' + userName;
         modal.classList.remove('hidden');
         loading.classList.remove('hidden');
         content.classList.add('hidden');
@@ -820,7 +986,7 @@
         emptyMsg.classList.add('hidden');
 
         try {
-            const resp = await fetch('/users/vouchers/' + userId);
+            const resp = await fetch('<?= site_url('users/vouchers') ?>/' + userId);
             const data = await resp.json();
 
             loading.classList.add('hidden');
@@ -830,15 +996,15 @@
                 data.vouchers.forEach(v => {
                     const isExpired = v.status !== 'active' || (new Date(v.expires_at) < new Date());
                     const statusBadge = !isExpired
-                        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Aktif</span>'
+                        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><?= lang('Admin.active') ?></span>'
                         : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Expired</span>';
 
                     const revokeBtn = !isExpired
-                        ? `<a href="/users/revoke-voucher/${v.id}" 
-                              data-confirm="Cabut voucher ${v.voucher_code} ini?" 
-                              data-confirm-title="Cabut Voucher" 
+                        ? `<a href="<?= site_url('users/revoke-voucher') ?>/${v.id}" 
+                              data-confirm="<?= addslashes(lang('Admin.users_revoke_confirm_msg')) ?>" 
+                              data-confirm-title="<?= addslashes(lang('Admin.users_revoke_confirm_title')) ?>" 
                               class="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] border border-red-200 transition-colors">
-                              Cabut
+                              <?= lang('Admin.users_vouchers_btn_revoke') ?>
                            </a>`
                         : '';
 
@@ -853,7 +1019,7 @@
                             </div>
                             <div class="text-[11px] text-slate-600 mt-0.5">${v.discount_description || '-'}</div>
                             <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-                                Berakhir: <span class="font-mono font-semibold">${new Date(v.expires_at).toLocaleString('id-ID')}</span>
+                                <?= lang('Admin.users_vouchers_expires') ?>: <span class="font-mono font-semibold">${new Date(v.expires_at).toLocaleString('<?= service('language')->getLocale() === 'id' ? 'id-ID' : 'en-US' ?>')}</span>
                             </div>
                         </div>
                         <div class="shrink-0 flex items-center gap-1.5">
@@ -874,6 +1040,191 @@
 
     function closeVouchersModal() {
         document.getElementById('userVouchersModal').classList.add('hidden');
+    }
+
+    // Modal Lihat Detail User
+    let activeDetailUserId = null;
+
+    async function openUserDetailModal(userId) {
+        activeDetailUserId = userId;
+        const modal = document.getElementById('userDetailModal');
+        const loading = document.getElementById('userDetailLoading');
+        const content = document.getElementById('userDetailContent');
+
+        modal.classList.remove('hidden');
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+
+        try {
+            const resp = await fetch('<?= site_url('users/detail') ?>/' + userId);
+            const data = await resp.json();
+
+            loading.classList.add('hidden');
+            content.classList.remove('hidden');
+
+            if (data.status === 'success' && data.user) {
+                const u = data.user;
+                const isBanned = u.effective_status === 'banned';
+                const isAnonymized = u.effective_status === 'anonymized';
+
+                // Avatar & Name
+                document.getElementById('detailUserName').innerText = u.display_name || 'Pengguna';
+                document.getElementById('detailUserAvatar').innerText = (u.display_name || 'U').charAt(0).toUpperCase();
+                document.getElementById('detailUserId').innerText = 'UID: ' + u.id;
+
+                // Status badge
+                const badge = document.getElementById('detailUserBadge');
+                if (isBanned) {
+                    badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200';
+                    badge.innerText = '<?= addslashes(lang('Admin.users_status_banned')) ?>';
+                } else if (u.effective_status === 'dormant') {
+                    badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200';
+                    badge.innerText = 'Dormant';
+                } else if (u.effective_status === 'pending_deletion') {
+                    badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200';
+                    badge.innerText = 'Grace Period';
+                } else if (isAnonymized) {
+                    badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300';
+                    badge.innerText = '<?= addslashes(lang('Admin.users_status_shredded')) ?>';
+                } else {
+                    badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+                    badge.innerText = '<?= addslashes(lang('Admin.users_status_active')) ?>';
+                }
+
+                // Identitas & Kontak
+                document.getElementById('detailUserEmail').innerText = u.email_display || '-';
+                document.getElementById('detailUserPhone').innerText = u.phone_display || '-';
+                document.getElementById('detailUserGender').innerText = u.gender || '-';
+                document.getElementById('detailUserBirth').innerText = u.birth_date || '-';
+
+                // Halal & Diet
+                const halalContainer = document.getElementById('detailUserHalal');
+                if (u.is_halal_only) {
+                    halalContainer.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Halal Only</span>';
+                } else {
+                    halalContainer.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"><?= service('language')->getLocale() === 'id' ? 'Fleksibel' : 'Flexible' ?></span>';
+                }
+
+                document.getElementById('detailUserDiet').innerText = (!u.dietary_type || u.dietary_type === 'none') ? '<?= service('language')->getLocale() === 'id' ? 'Bebas / Standar' : 'Standard / None' ?>' : u.dietary_type;
+
+                const budgetMap = <?= service('language')->getLocale() === 'id' 
+                    ? "{ 0: 'Fleksibel', 1: 'Hemat (< 25rb)', 2: 'Sedang (25-50rb)', 3: 'Mewah (> 50rb)' }"
+                    : "{ 0: 'Flexible', 1: 'Budget (< 25k)', 2: 'Medium (25-50k)', 3: 'Premium (> 50k)' }" ?>;
+                document.getElementById('detailUserBudget').innerText = budgetMap[u.budget_preference] || (u.budget_preference ? 'Tier ' + u.budget_preference : '<?= service('language')->getLocale() === 'id' ? 'Standar' : 'Standard' ?>');
+
+                // Allergies
+                const allergiesContainer = document.getElementById('detailUserAllergies');
+                let allergiesList = [];
+                try {
+                    if (Array.isArray(u.allergies)) {
+                        allergiesList = u.allergies;
+                    } else if (typeof u.allergies === 'string' && u.allergies.trim()) {
+                        allergiesList = JSON.parse(u.allergies);
+                    }
+                } catch(e) {
+                    allergiesList = [];
+                }
+
+                if (allergiesList && allergiesList.length > 0) {
+                    allergiesContainer.innerHTML = allergiesList.map(a => 
+                        `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">${a}</span>`
+                    ).join('');
+                } else {
+                    allergiesContainer.innerHTML = '<span class="text-slate-400 text-xs italic"><?= addslashes(lang('Admin.users_detail_no_allergies')) ?></span>';
+                }
+
+                // Telemetri Perangkat
+                document.getElementById('detailUserDevice').innerText = u.device_model || '-';
+                document.getElementById('detailUserOs').innerText = u.device_os || '-';
+                document.getElementById('detailUserAppVersion').innerText = u.app_version || '-';
+                const userLocale = '<?= service('language')->getLocale() === 'id' ? 'id-ID' : 'en-US' ?>';
+                document.getElementById('detailUserLastActive').innerText = u.last_active_at ? new Date(u.last_active_at).toLocaleString(userLocale) : (u.created_at ? new Date(u.created_at).toLocaleString(userLocale) : '-');
+                document.getElementById('detailUserHash').innerText = u.email_hash ? ('Anti-Evasion SHA-256: ' + u.email_hash) : ('ID: ' + u.id);
+
+                // Vouchers list
+                const voucherList = document.getElementById('detailUserVoucherList');
+                const voucherEmpty = document.getElementById('detailUserVoucherEmpty');
+                const voucherCount = document.getElementById('detailUserVoucherCount');
+                voucherList.innerHTML = '';
+
+                const vouchers = data.vouchers || [];
+                voucherCount.innerText = vouchers.length;
+
+                if (vouchers.length > 0) {
+                    voucherEmpty.classList.add('hidden');
+                    vouchers.forEach(v => {
+                        const isExp = v.status !== 'active' || (new Date(v.expires_at) < new Date());
+                        const statusBadge = !isExp
+                            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><?= lang('Admin.active') ?></span>'
+                            : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Expired</span>';
+
+                        const revokeBtn = !isExp
+                            ? `<a href="<?= site_url('users/revoke-voucher') ?>/${v.id}" 
+                                  data-confirm="<?= addslashes(lang('Admin.users_revoke_confirm_msg')) ?>" 
+                                  data-confirm-title="<?= addslashes(lang('Admin.users_revoke_confirm_title')) ?>" 
+                                  class="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] border border-red-200 transition-colors">
+                                  <?= lang('Admin.users_vouchers_btn_revoke') ?>
+                               </a>`
+                            : '';
+
+                        const item = document.createElement('div');
+                        item.className = 'p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 text-xs shadow-2xs';
+                        item.innerHTML = `
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono font-bold text-red-600">${v.voucher_code}</span>
+                                    ${statusBadge}
+                                    ${v.merchant_name ? `<span class="text-[11px] text-slate-600 font-medium">(${v.merchant_name})</span>` : ''}
+                                </div>
+                                <div class="text-[11px] text-slate-600 mt-0.5">${v.discount_description || '-'}</div>
+                                <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+                                    <?= lang('Admin.users_vouchers_expires') ?>: <span class="font-mono font-semibold">${new Date(v.expires_at).toLocaleString(userLocale)}</span>
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                ${revokeBtn}
+                            </div>
+                        `;
+                        voucherList.appendChild(item);
+                    });
+                } else {
+                    voucherEmpty.classList.remove('hidden');
+                }
+
+                // Modal Footer button config
+                const injectBtn = document.getElementById('detailModalInjectBtn');
+                injectBtn.onclick = () => {
+                    closeUserDetailModal();
+                    openInjectModal(u.id, u.display_name, u.email_display, isBanned || isAnonymized);
+                };
+                if (isBanned || isAnonymized) {
+                    injectBtn.disabled = true;
+                    injectBtn.className = 'px-3.5 py-2 rounded-lg bg-slate-200 text-slate-400 cursor-not-allowed text-xs font-bold flex items-center gap-1 transition-colors';
+                } else {
+                    injectBtn.disabled = false;
+                    injectBtn.className = 'px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-sm';
+                }
+            } else {
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+                content.innerHTML = '<div class="py-8 text-center text-xs text-red-500">Failed to load user details: ' + (data.message || 'Not found') + '</div>';
+            }
+        } catch (e) {
+            loading.classList.add('hidden');
+            content.classList.remove('hidden');
+            content.innerHTML = '<div class="py-8 text-center text-xs text-red-500">Error: ' + e + '</div>';
+        }
+    }
+
+    function closeUserDetailModal() {
+        document.getElementById('userDetailModal').classList.add('hidden');
+    }
+
+    function copyDetailUserId() {
+        if (activeDetailUserId) {
+            navigator.clipboard.writeText(activeDetailUserId);
+            alert('<?= addslashes(lang('Admin.users_detail_copied')) ?>' + activeDetailUserId);
+        }
     }
 
     applyFilters();

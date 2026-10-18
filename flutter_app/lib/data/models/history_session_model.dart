@@ -44,20 +44,28 @@ class HistorySessionModel {
   }
 
   factory HistorySessionModel.fromJson(Map<String, dynamic> json) {
+    final title = json['title']?.toString() ??
+        json['prompt']?.toString() ??
+        'Rekomendasi Kuliner';
+    final restaurant = json['restaurant']?.toString() ??
+        json['first_restaurant_name']?.toString() ??
+        'Tempat Makan Terdekat';
+    final mood = json['detected_mood']?.toString() ?? 'Mood Discovery';
+
     return HistorySessionModel(
       id: json['id']?.toString() ?? '',
-      sessionId: json['session_id'] ?? '',
-      title: json['title'] ?? '',
-      detectedMood: json['detected_mood'] ?? '',
-      restaurant: json['restaurant'] ?? '',
+      sessionId: json['session_id']?.toString() ?? '',
+      title: title.isNotEmpty ? title : 'Rekomendasi Kuliner',
+      detectedMood: mood.isNotEmpty ? mood : 'Mood Discovery',
+      restaurant: restaurant.isNotEmpty ? restaurant : 'Tempat Makan Terdekat',
       foodCategories: (json['food_categories'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      city: json['city'],
-      hasVoucher: json['has_voucher'] ?? false,
+      city: json['city']?.toString(),
+      hasVoucher: json['has_voucher'] == true || json['has_voucher'] == 1,
       createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'])
+          ? DateTime.tryParse(json['created_at'].toString())
           : null,
       cachedResponse: json['cached_response'] != null &&
               json['cached_response'] is Map<String, dynamic>

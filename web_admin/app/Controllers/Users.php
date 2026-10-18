@@ -16,6 +16,7 @@ class Users extends BaseController
 
     public function __construct()
     {
+        helper(['url', 'form', 'pdp']);
         $this->userModel = new UserProfileModel();
         $this->voucherModel = new UserVoucherModel();
         $this->merchantModel = new SponsoredMerchantModel();
@@ -138,7 +139,7 @@ class Users extends BaseController
     {
         $user = $this->userModel->find($id);
         if (!$user) {
-            return redirect()->to('/users')->with('error', 'Pengguna tidak ditemukan.');
+            return redirect()->to(site_url('users'))->with('error', 'Pengguna tidak ditemukan.');
         }
 
         $reason = trim($this->request->getPost('reason') ?? $this->request->getGet('reason') ?? '');
@@ -167,7 +168,7 @@ class Users extends BaseController
                 'is_suspicious'   => false,
             ]);
 
-            return redirect()->to('/users')->with('success', 'Akun ' . esc($user['display_name']) . ' berhasil diaktifkan kembali (unbanned).');
+            return redirect()->to(site_url('users'))->with('success', 'Akun ' . esc($user['display_name']) . ' berhasil diaktifkan kembali (unbanned).');
         } else {
             // Ban user: compute SHA-256 hash & telemetry signature to prevent ban evasion
             $banReason = $reason !== '' ? $reason : 'Dinonaktifkan / Banned oleh administrator';
@@ -201,7 +202,7 @@ class Users extends BaseController
                 'is_suspicious'   => true,
             ]);
 
-            return redirect()->to('/users')->with('success', 'Akun ' . esc($user['display_name']) . ' berhasil diblokir (banned). Hash identitas diamankan untuk anti-evasion.');
+            return redirect()->to(site_url('users'))->with('success', 'Akun ' . esc($user['display_name']) . ' berhasil diblokir (banned). Hash identitas diamankan untuk anti-evasion.');
         }
     }
 
@@ -213,12 +214,12 @@ class Users extends BaseController
     {
         $user = $this->userModel->find($id);
         if (!$user) {
-            return redirect()->to('/users')->with('error', 'Pengguna tidak ditemukan.');
+            return redirect()->to(site_url('users'))->with('error', 'Pengguna tidak ditemukan.');
         }
 
         // BANNED accounts are strictly non-anonymizable to prevent evasion
         if (!empty($user['is_banned']) || ($user['status'] ?? '') === 'banned') {
-            return redirect()->to('/users')->with('error', 'Akun berstatus BANNED tidak dapat dihapus/dianonimkan demi audit anti-fraud & pencegahan ban evasion (UU PDP No. 27/2022).');
+            return redirect()->to(site_url('users'))->with('error', 'Akun berstatus BANNED tidak dapat dihapus/dianonimkan demi audit anti-fraud & pencegahan ban evasion (UU PDP No. 27/2022).');
         }
 
         // 1. Unlink sessions to preserve merchant aggregates
@@ -261,7 +262,7 @@ class Users extends BaseController
             'is_suspicious'   => false,
         ]);
 
-        return redirect()->to('/users')->with('success', 'Akun ' . esc($user['display_name']) . ' berhasil dianonimkan (crypto-shredded) sesuai UU PDP No. 27/2022. Sesi analitik merchant telah di-unlink tanpa merusak metrik agregat mitra.');
+        return redirect()->to(site_url('users'))->with('success', 'Akun ' . esc($user['display_name']) . ' berhasil dianonimkan (crypto-shredded) sesuai UU PDP No. 27/2022. Sesi analitik merchant telah di-unlink tanpa merusak metrik agregat mitra.');
     }
 
     public function injectVoucher()
@@ -278,18 +279,18 @@ class Users extends BaseController
 
         $user = $this->userModel->find($userId);
         if (!$user) {
-            return redirect()->to('/users')->with('error', 'Pengguna penerima voucher tidak ditemukan.');
+            return redirect()->to(site_url('users'))->with('error', 'Pengguna penerima voucher tidak ditemukan.');
         }
 
         if (!empty($user['is_banned']) || ($user['status'] ?? '') === 'banned') {
-            return redirect()->to('/users')->with('error', 'Gagal injeksi voucher: Pengguna sedang dalam status BANNED.');
+            return redirect()->to(site_url('users'))->with('error', 'Gagal injeksi voucher: Pengguna sedang dalam status BANNED.');
         }
 
         if (($user['status'] ?? '') === 'anonymized') {
-            return redirect()->to('/users')->with('error', 'Gagal injeksi voucher: Profil pengguna telah dianonimkan.');
+            return redirect()->to(site_url('users'))->with('error', 'Gagal injeksi voucher: Profil pengguna telah dianonimkan.');
         }
 
-        if (!empty($merchantId)) {
+        if ($merchantId !== '') {
             $merchant = $this->merchantModel->find($merchantId);
             if ($merchant) {
                 if (empty($voucherCode)) {
@@ -298,7 +299,11 @@ class Users extends BaseController
                 if (empty($discountDesc)) {
                     $discountDesc = $merchant['discount_description'];
                 }
+            } else {
+                $merchantId = null;
             }
+        } else {
+            $merchantId = null;
         }
 
         if (empty($voucherCode)) {
@@ -319,19 +324,39 @@ class Users extends BaseController
             mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
         );
 
-        $this->voucherModel->insert([
-            'id'                   => $voucherId,
-            'merchant_id'          => !empty($merchantId) ? $merchantId : null,
-            'user_id'              => $userId,
-            'voucher_code'         => $voucherCode,
-            'status'               => 'active',
-            'discount_description' => $discountDesc,
-            'injected_by'          => session()->get('username') ?? 'Admin',
-            'claimed_at'           => $now,
-            'expires_at'           => $expiresAt,
-        ]);
+        try {
+            $this->voucherModel->insert([
+                'id'                   => $voucherId,
+                'merchant_id'          => $merchantId,
+                'user_id'              => $userId,
+                'voucher_code'         => $voucherCode,
+                'status'               => 'active',
+                'discount_description' => $discountDesc,
+                'injected_by'          => session()->get('username') ?? 'Admin',
+                'claimed_at'           => $now,
+                'expires_at'           => $expiresAt,
+            ]);
 
-        return redirect()->to('/users')->with('success', 'Voucher ' . esc($voucherCode) . ' (' . esc($discountDesc) . ') berhasil diinjeksikan ke ' . esc($user['display_name']) . '! Berlaku ' . $durationHours . ' jam.');
+            // Audit log
+            $this->auditModel->recordLog([
+                'event_type'      => 'voucher_injection',
+                'severity'        => 'info',
+                'target_resource' => 'user_vouchers:' . $voucherId,
+                'action'          => 'inject_voucher',
+                'details'         => [
+                    'voucher_code' => $voucherCode,
+                    'target_user'  => $user['email'] ?? $userId,
+                    'injected_by'  => session()->get('username') ?? 'Admin',
+                    'expires_at'   => $expiresAt,
+                ],
+                'is_suspicious'   => false,
+            ]);
+
+            return redirect()->to(site_url('users'))->with('success', 'Voucher ' . esc($voucherCode) . ' (' . esc($discountDesc) . ') berhasil diinjeksikan ke ' . esc($user['display_name']) . '! Berlaku ' . $durationHours . ' jam.');
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal injeksi voucher: ' . $e->getMessage());
+            return redirect()->to(site_url('users'))->with('error', 'Gagal injeksi voucher: ' . $e->getMessage());
+        }
     }
 
     public function userVouchers(string $userId)
@@ -341,12 +366,58 @@ class Users extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Pengguna tidak ditemukan']);
         }
 
+        $session = session();
+        $userRole = $session->get('role') ?? 'analyst';
+        $isPrivileged = is_privileged_role($userRole);
+
+        $user['email_display'] = mask_email($user['email'] ?? '', false);
+        $user['phone_display'] = mask_phone($user['phone'] ?? '', false);
+
         $vouchers = $this->voucherModel->getUserVouchers($userId);
 
         return $this->response->setJSON([
-            'status'   => 'success',
-            'user'     => $user,
-            'vouchers' => $vouchers,
+            'status'       => 'success',
+            'user'         => $user,
+            'isPrivileged' => $isPrivileged,
+            'vouchers'     => $vouchers,
+        ]);
+    }
+
+    public function detail(string $userId)
+    {
+        $user = $this->userModel->find($userId);
+        if (!$user) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Pengguna tidak ditemukan']);
+        }
+
+        $session = session();
+        $userRole = $session->get('role') ?? 'analyst';
+        $isPrivileged = is_privileged_role($userRole);
+
+        $user['email_display'] = mask_email($user['email'] ?? '', false);
+        $user['phone_display'] = mask_phone($user['phone'] ?? '', false);
+
+        // Effective status
+        $st = strtolower($user['status'] ?? '');
+        if ($st === 'banned' || !empty($user['is_banned'])) {
+            $user['effective_status'] = 'banned';
+        } elseif ($st === 'dormant') {
+            $user['effective_status'] = 'dormant';
+        } elseif ($st === 'pending_deletion') {
+            $user['effective_status'] = 'pending_deletion';
+        } elseif ($st === 'anonymized') {
+            $user['effective_status'] = 'anonymized';
+        } else {
+            $user['effective_status'] = 'active';
+        }
+
+        $vouchers = $this->voucherModel->getUserVouchers($userId);
+
+        return $this->response->setJSON([
+            'status'       => 'success',
+            'user'         => $user,
+            'isPrivileged' => $isPrivileged,
+            'vouchers'     => $vouchers,
         ]);
     }
 
@@ -354,14 +425,14 @@ class Users extends BaseController
     {
         $voucher = $this->voucherModel->find($voucherId);
         if (!$voucher) {
-            return redirect()->to('/users')->with('error', 'Voucher tidak ditemukan.');
+            return redirect()->to(site_url('users'))->with('error', 'Voucher tidak ditemukan.');
         }
 
         $this->voucherModel->update($voucherId, [
             'status' => 'expired',
         ]);
 
-        return redirect()->to('/users')->with('success', 'Voucher ' . esc($voucher['voucher_code']) . ' berhasil dicabut (expired).');
+        return redirect()->to(site_url('users'))->with('success', 'Voucher ' . esc($voucher['voucher_code']) . ' berhasil dicabut (expired).');
     }
 
     public function delete(string $id)

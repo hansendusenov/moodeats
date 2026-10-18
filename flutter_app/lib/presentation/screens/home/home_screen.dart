@@ -8,10 +8,12 @@ import 'package:moodeats_app/core/constants/app_colors.dart';
 import 'package:moodeats_app/core/localization/app_language.dart';
 import 'package:moodeats_app/core/localization/app_strings.dart';
 import 'package:moodeats_app/data/models/banner_model.dart';
-import 'package:moodeats_app/data/models/menu_model.dart';
+import 'package:moodeats_app/data/models/recommendation_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:moodeats_app/data/providers/app_providers.dart';
 import 'package:moodeats_app/presentation/screens/results/results_screen.dart';
 import 'package:moodeats_app/presentation/widgets/voucher_countdown_dialog.dart';
+import 'package:moodeats_app/presentation/widgets/location_picker_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:moodeats_app/data/services/location_service.dart';
 import 'package:moodeats_app/data/services/firebase_auth_service.dart';
@@ -688,7 +690,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(bannersProvider);
-    final defaultMenusAsync = ref.watch(defaultMenusProvider);
+    final comfortRestaurantsAsync = ref.watch(nearbyComfortRestaurantsProvider);
     final voucherState = ref.watch(activeVoucherProvider);
     final userLocation = ref.watch(userLocationProvider);
     final authUser = ref.watch(authUserProvider);
@@ -733,8 +735,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _buildQuickMoodsSection(tr),
                   const SizedBox(height: 24),
 
-                  // Comfort Food / Curated Default Menus Section
-                  _buildDefaultMenusSection(defaultMenusAsync, tr),
+                  // Curated Comfort Food Nearest Restaurants Section (~10 restaurants)
+                  _buildCuratedComfortSection(comfortRestaurantsAsync, tr),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -780,7 +782,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () => _showLocationPickerSheet(context, userLocation, tr),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              constraints: const BoxConstraints(maxWidth: 185),
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width >= 800 ? 320 : 185),
               decoration: BoxDecoration(
                 color: AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(16),
@@ -1397,7 +1399,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDefaultMenusSection(AsyncValue<List<MenuModel>> defaultMenusAsync, AppStrings tr) {
+  Widget _buildCuratedComfortSection(AsyncValue<List<PlaceModel>> comfortAsync, AppStrings tr) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1414,65 +1416,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const Spacer(),
-              Text(
-                tr.availableInYourArea,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.near_me_rounded, size: 12, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      tr.availableInYourArea,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        defaultMenusAsync.when(
+        comfortAsync.when(
           loading: () => const Center(
             child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: CircularProgressIndicator(color: AppColors.primary),
+              padding: EdgeInsets.all(28.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppColors.primary),
+                  SizedBox(height: 10),
+                  Text(
+                    'Mencari restoran terdekat...',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
             ),
           ),
-          error: (_, __) {
-            final cached = AppCacheService.getCachedDefaultMenus();
-            if (cached.isNotEmpty) {
-              return _buildMenusListView(cached, tr);
-            }
-            return Center(child: Text(tr.isId ? 'Belum ada menu kurasi' : 'No curated menus yet'));
+          error: (err, _) {
+            debugPrint('Error loading comfort food places: $err');
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  tr.isId
+                      ? 'Gagal memuat rekomendasi terdekat. Coba refresh.'
+                      : 'Unable to load nearby restaurants. Please refresh.',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                ),
+              ),
+            );
           },
-          data: (menus) {
-            final displayMenus = menus.isNotEmpty ? menus : AppCacheService.getCachedDefaultMenus();
-            if (displayMenus.isEmpty) {
-              return Center(child: Text(tr.isId ? 'Belum ada menu kurasi' : 'No curated menus yet'));
+          data: (places) {
+            if (places.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    tr.isId ? 'Belum ada restoran terdekat ditemukan' : 'No nearby restaurants found',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                ),
+              );
             }
-            return _buildMenusListView(displayMenus, tr);
+            return _buildComfortRestaurantsList(places, tr);
           },
         ),
       ],
     );
   }
 
-  Widget _buildMenusListView(List<MenuModel> rawMenus, AppStrings tr) {
-    final seen = <String>{};
-    final menus = rawMenus.where((m) => seen.add(m.foodName)).toList();
+  Widget _buildComfortRestaurantsList(List<PlaceModel> places, AppStrings tr) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 800;
 
     if (isDesktop) {
-      final crossAxisCount = screenWidth >= 1100 ? 3 : 2;
+      final crossAxisCount = screenWidth >= 1150 ? 3 : 2;
       return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: menus.length,
+        itemCount: places.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
-          childAspectRatio: 2.7,
+          childAspectRatio: 2.3,
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
         ),
         itemBuilder: (context, index) {
-          final menu = menus[index];
-          return _buildMenuItemCard(menu, tr);
+          final place = places[index];
+          return _buildComfortRestaurantCard(place, tr);
         },
       );
     }
@@ -1481,21 +1521,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: menus.length,
+      itemCount: places.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final menu = menus[index];
-        return _buildMenuItemCard(menu, tr);
+        final place = places[index];
+        return _buildComfortRestaurantCard(place, tr);
       },
     );
   }
 
-  Widget _buildMenuItemCard(MenuModel menu, AppStrings tr) {
+  Widget _buildComfortRestaurantCard(PlaceModel place, AppStrings tr) {
     return BouncyTap(
       onTap: () {
         _searchController.text = tr.isId
-            ? 'Pengen makan ${menu.foodName}. ${menu.description}'
-            : 'Craving ${menu.foodName}. ${menu.description}';
+            ? 'Cari menu dan suasana di ${place.name}, ${place.category}'
+            : 'Explore menu and atmosphere at ${place.name}, ${place.category}';
         _executeAgentSearch(_searchController.text, tr);
       },
       child: Container(
@@ -1506,75 +1546,200 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.redBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text('🍲', style: TextStyle(fontSize: 24)),
+            // Restaurant Thumbnail Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 76,
+                height: 76,
+                child: Image.network(
+                  place.photoUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppColors.redBg,
+                    child: const Center(
+                      child: Text('🍲', style: TextStyle(fontSize: 26)),
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
+            // Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    menu.foodName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    menu.description ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Row(
                     children: [
+                      Expanded(
+                        child: Text(
+                          place.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade50,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.amber.shade300, width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star_rounded, size: 12, color: Colors.amber),
+                            const SizedBox(width: 2),
+                            Text(
+                              place.rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  // Category & Distance
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          place.category,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const Text(' • ', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                      const Icon(Icons.location_on, size: 11, color: AppColors.primary),
                       Text(
-                        menu.priceEst ?? 'Rp 25.000',
+                        '${place.distanceKm.toStringAsFixed(1)} km',
                         style: const TextStyle(
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          fontSize: 11.5,
                           color: AppColors.primary,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  // Address
+                  Text(
+                    place.address,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Open Status & Actions
+                  Row(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(6),
+                          color: place.isOpen ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
-                          menu.category,
-                          style: const TextStyle(
+                          place.isOpen
+                              ? (tr.isId ? 'Buka' : 'Open')
+                              : (tr.isId ? 'Tutup' : 'Closed'),
+                          style: TextStyle(
                             fontSize: 9.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.bold,
+                            color: place.isOpen ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      // Maps Button
+                      if (place.actionLinks.googleMaps != null)
+                        GestureDetector(
+                          onTap: () => _openExternalLink(place.actionLinks.googleMaps!),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.map_outlined, size: 11, color: AppColors.textPrimary),
+                                SizedBox(width: 3),
+                                Text(
+                                  'Maps',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      // Delivery Button
+                      GestureDetector(
+                        onTap: () {
+                          final delUrl = (place.actionLinks.deliveryApp != null &&
+                                  place.actionLinks.deliveryApp!.isNotEmpty &&
+                                  !place.actionLinks.deliveryApp!.contains('gofood.link'))
+                              ? place.actionLinks.deliveryApp!
+                              : 'https://gofood.co.id/jakarta/search?q=${Uri.encodeComponent(place.name)}';
+                          _openExternalLink(delUrl);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00AA13),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.delivery_dining, size: 11, color: Colors.white),
+                              const SizedBox(width: 3),
+                              Text(
+                                tr.isId ? 'Pesan' : 'Order',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -1583,179 +1748,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: AppColors.textMuted),
           ],
         ),
       ),
     );
   }
 
-  void _showLocationPickerSheet(BuildContext context, UserLocation currentLocation, AppStrings tr) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  const Icon(Icons.location_on, color: AppColors.primary, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    tr.culinaryLocation,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '${tr.isId ? "Saat ini" : "Current"}: ${currentLocation.displayLabel} (${currentLocation.latitude.toStringAsFixed(4)}, ${currentLocation.longitude.toStringAsFixed(4)})',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Max 10 km Delivery Radius Guarantee Banner
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.redBg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.borderRed),
-                ),
-                child: Row(
-                  children: [
-                    const Text('🛵', style: TextStyle(fontSize: 20)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        tr.isId
-                            ? 'Radius Rekomendasi: Maksimal 10 km dari lokasimu agar makanan lezat cepat sampai dan hemat ongkir Gojek / Grab.'
-                            : 'Recommendation Radius: Max 10 km from your location for warm delivery and affordable courier rates.',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  icon: const Icon(Icons.gps_fixed, size: 18),
-                  label: Text(
-                    tr.detectGpsNow,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                  onPressed: () async {
-                    Navigator.of(ctx).pop();
-                    await ref.read(userLocationProvider.notifier).detectCurrentLocation();
-                  },
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                tr.isId ? 'DKI Jakarta (5 Kota Administratif)' : 'DKI Jakarta (5 Administrative Cities)',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildCityChip(ctx, 'Jakarta Utara', -6.1384, 106.8640),
-                  _buildCityChip(ctx, 'Jakarta Pusat', -6.1754, 106.8272),
-                  _buildCityChip(ctx, 'Jakarta Selatan', -6.2297, 106.8580),
-                  _buildCityChip(ctx, 'Jakarta Barat', -6.1683, 106.7588),
-                  _buildCityChip(ctx, 'Jakarta Timur', -6.2250, 106.9004),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(
-                tr.isId ? 'Bodetabek & Kota Lain' : 'Greater Jakarta & Other Cities',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildCityChip(ctx, 'Tangerang / BSD', -6.3015, 106.6527),
-                  _buildCityChip(ctx, 'Bekasi', -6.2383, 106.9756),
-                  _buildCityChip(ctx, 'Depok', -6.4025, 106.7942),
-                  _buildCityChip(ctx, 'Bogor', -6.5971, 106.8060),
-                  _buildCityChip(ctx, 'Bandung', -6.9175, 107.6191),
-                  _buildCityChip(ctx, 'Surabaya', -7.2575, 112.7521),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  Future<void> _openExternalLink(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      debugPrint('Could not launch url $url: $e');
+    }
   }
 
-  Widget _buildCityChip(BuildContext ctx, String name, double lat, double lng) {
-    return ActionChip(
-      label: Text(name, style: const TextStyle(fontSize: 12)),
-      backgroundColor: AppColors.surfaceVariant,
-      onPressed: () {
-        ref.read(userLocationProvider.notifier).setManualLocation(
-              latitude: lat,
-              longitude: lng,
-              cityName: name,
-            );
-        Navigator.of(ctx).pop();
-      },
+  void _showLocationPickerSheet(BuildContext context, UserLocation currentLocation, AppStrings tr) {
+    showLocationPickerSheet(
+      context: context,
+      ref: ref,
+      currentLocation: currentLocation,
+      tr: tr,
     );
   }
 }

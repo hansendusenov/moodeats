@@ -51,6 +51,30 @@
       try { localStorage.removeItem('moodeats_web_session'); } catch(e){}
     };
 
+    // Profiles DB persistence for Web
+    window.saveWebProfilesDb = function(jsonStr) {
+      try { localStorage.setItem('moodeats_profiles_db', jsonStr); } catch(e){}
+    };
+    window.getWebProfilesDb = function() {
+      try {
+        return localStorage.getItem('moodeats_profiles_db') || '{}';
+      } catch(e) {
+        return '{}';
+      }
+    };
+
+    // Profile Completion State for Web (remembers user has completed profile once)
+    window.setProfileUpdated = function(val) {
+      try { localStorage.setItem('moodeats_profile_updated', val ? 'true' : 'false'); } catch(e){}
+    };
+    window.hasProfileUpdated = function() {
+      try {
+        return localStorage.getItem('moodeats_profile_updated') === 'true';
+      } catch(e) {
+        return false;
+      }
+    };
+
     // Google Sign-In Popup Function
     window.triggerGoogleAuthPopupCallback = function(cb) { window.triggerGoogleAuthPopup().then(res => cb(res)); };
     window.triggerGoogleAuthPopup = function() {
@@ -96,6 +120,20 @@
   </script>
 </head>
 <body style="margin: 0; background-color: #FAFAFA;">
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (var i = 0; i < registrations.length; i++) {
+          registrations[i].unregister();
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (var name of names) caches.delete(name);
+      });
+    }
+  </script>
+  <script src="flutter_bootstrap.js?v=202610180332" async></script>
 </body>
 </html>

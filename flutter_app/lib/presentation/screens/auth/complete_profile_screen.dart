@@ -6,6 +6,7 @@ import 'package:moodeats_app/core/localization/app_strings.dart';
 import 'package:moodeats_app/data/providers/app_providers.dart';
 import 'package:moodeats_app/data/services/firebase_auth_service.dart';
 import 'package:moodeats_app/data/services/device_info_service.dart';
+import 'package:moodeats_app/data/services/auth/google_auth_helper.dart';
 import 'package:moodeats_app/presentation/screens/main_navigation_screen.dart';
 
 class CompleteProfileScreen extends ConsumerStatefulWidget {
@@ -37,6 +38,39 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
       }
       if (user.birthDate.isNotEmpty) _selectedBirthDate = user.birthDate;
       if (user.gender.isNotEmpty) _selectedGender = user.gender;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        if (user.birthDate.isNotEmpty && user.gender.isNotEmpty) {
+          ref.read(mainTabProvider.notifier).state = 0;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+          );
+          return;
+        }
+
+        final authService = ref.read(firebaseAuthServiceProvider);
+        final dbData = await authService.fetchProfileFromDatabase(email: user.email, userId: user.id);
+        if (dbData != null && mounted) {
+          final bDate = (dbData['birthDate'] as String?) ?? '';
+          final gen = (dbData['gender'] as String?) ?? '';
+          if (bDate.isNotEmpty && gen.isNotEmpty) {
+            final enriched = user.copyWith(
+              birthDate: bDate,
+              gender: gen,
+              displayName: (dbData['displayName'] as String?)?.isNotEmpty == true
+                  ? dbData['displayName'] as String
+                  : user.displayName,
+            );
+            ref.read(authUserProvider.notifier).setLoggedInUser(enriched);
+            GoogleAuthPlatformHelper.setProfileUpdated(true);
+            ref.read(mainTabProvider.notifier).state = 0;
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+            );
+          }
+        }
+      });
     }
   }
 
@@ -86,6 +120,8 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
             password: password.isNotEmpty ? password : null,
           );
 
+      GoogleAuthPlatformHelper.setProfileUpdated(true);
+
       try {
         final telemetry = await DeviceInfoService.getTelemetry();
         await ref.read(apiServiceProvider).syncUserProfile(
@@ -131,6 +167,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   }
 
   void _handleSkip() {
+    GoogleAuthPlatformHelper.setProfileUpdated(true);
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       (route) => false,

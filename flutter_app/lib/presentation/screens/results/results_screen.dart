@@ -172,7 +172,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            data.detectedMood.toUpperCase(),
+                            _getLocalizedMood(data.detectedMood, userPrompt, tr.isId).toUpperCase(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -204,7 +204,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    data.rationale,
+                    _getLocalizedRationale(data.rationale, widget.userPrompt, tr.isId),
                     style: const TextStyle(
                       fontSize: 14,
                       height: 1.5,
@@ -395,6 +395,200 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   );
   }
 
+  bool _isEnglishText(String text) {
+    if (text.trim().isEmpty) return false;
+    final lower = ' ${text.toLowerCase()} ';
+    final enMarkers = [
+      ' i ', "i'm", "im ", "my ", "me ", "we ", "you ", "want", "craving", "need",
+      "feel", "feeling", "hungry", "tired", "sad", "happy", "stress", "stressed",
+      "cold", "warm", "hot", "good", "bad", "eat", "food", "late", "work", "working",
+      "night", "dinner", "lunch", "breakfast", "something", "recommend", "recommendation",
+      "soup", "coffee", "sweet", "spicy", "give", "please", "search", "best", "where",
+      "comfort", "relax", "exhausted", "burnout", "overwhelmed", "after", "long", "day"
+    ];
+    int score = 0;
+    for (final marker in enMarkers) {
+      if (lower.contains(marker)) score++;
+    }
+    final idMarkers = [
+      ' saya ', ' aku ', ' gue ', ' gw ', ' lagi ', ' pengen ', ' mau ', ' butuh ',
+      ' lapar ', ' laper ', ' lelah ', ' capek ', ' cape ', ' stres ', ' sedih ',
+      ' senang ', ' dingin ', ' anget ', ' hangat ', ' makan ', ' malam ', ' siang ',
+      ' sarapan ', ' kerja ', ' lembur ', ' cari ', ' rekomendasi ', ' dong '
+    ];
+    int idScore = 0;
+    for (final marker in idMarkers) {
+      if (lower.contains(marker)) idScore++;
+    }
+    return score > idScore;
+  }
+
+  String _getLocalizedMood(String mood, String userPrompt, bool isId) {
+    final shouldBeEnglish = !isId || _isEnglishText(userPrompt);
+    if (!shouldBeEnglish) return mood;
+
+    final lower = mood.toLowerCase();
+    if (lower.contains('lelah') || lower.contains('capek') || lower.contains('exhaust') || lower.contains('lembur')) {
+      return 'Overworked & Exhausted';
+    }
+    if (lower.contains('stres') || lower.contains('stress') || lower.contains('teriak')) {
+      return 'Stressed & Overwhelmed';
+    }
+    if (lower.contains('sedih') || lower.contains('mellow') || lower.contains('galau') || lower.contains('sad')) {
+      return 'Mellow & Seeking Comfort';
+    }
+    if (lower.contains('senang') || lower.contains('happy') || lower.contains('gembira')) {
+      return 'Celebratory & Joyful';
+    }
+    if (lower.contains('bosan') || lower.contains('bored')) {
+      return 'Bored & Seeking Adventure';
+    }
+    if (lower.contains('hangat') || lower.contains('comfort')) {
+      return 'Warm Comfort Seeking';
+    }
+    if (lower.contains('lapar') || lower.contains('hungry')) {
+      return 'Hungry & Seeking Comfort';
+    }
+    return mood;
+  }
+
+  String _getLocalizedRationale(String rationale, String userPrompt, bool isId) {
+    final shouldBeEnglish = !isId || _isEnglishText(userPrompt);
+    if (!shouldBeEnglish) return rationale;
+
+    final lowerR = rationale.toLowerCase();
+    final lowerP = userPrompt.toLowerCase();
+    final hasIndonesianWords = lowerR.contains('bekerja') ||
+        lowerR.contains('tubuh') ||
+        lowerR.contains('makanan') ||
+        lowerR.contains('menenangkan') ||
+        lowerR.contains('menguras') ||
+        lowerR.contains('kehangatan') ||
+        lowerR.contains('sehingga') ||
+        lowerR.contains('lelah') ||
+        lowerR.contains('rasa') ||
+        lowerR.contains('energi') ||
+        lowerR.contains('suasana') ||
+        lowerR.contains('hati') ||
+        lowerR.contains('membantu') ||
+        lowerR.contains('pilihan') ||
+        lowerR.contains('untuk') ||
+        lowerR.contains('yang');
+
+    if (!hasIndonesianWords) return rationale;
+
+    if (lowerP.contains('late') || lowerP.contains('tired') || lowerP.contains('exhaust') || lowerR.contains('lelah') || lowerR.contains('lembur') || lowerR.contains('menguras')) {
+      return 'Working late and fatigue deplete mental stamina and energy reserves. Warm, restorative savory dishes calm your nervous system, replenishing vitality and comforting your senses.';
+    }
+    if (lowerP.contains('stress') || lowerR.contains('stres') || lowerR.contains('tekanan')) {
+      return 'Elevated stress triggers mental fatigue and sensory burnout. Rich flavors and savory aromas help stimulate endorphin release, melting away tension and restoring balanced focus.';
+    }
+    if (lowerP.contains('sad') || lowerP.contains('mellow') || lowerP.contains('down') || lowerR.contains('sedih') || lowerR.contains('galau')) {
+      return 'During gentle, reflective moments, wholesome comfort food boosts serotonin and provides emotional warmth, wrapping your mood in tender satisfaction.';
+    }
+    if (lowerP.contains('cold') || lowerP.contains('rain') || lowerR.contains('dingin') || lowerR.contains('hangat')) {
+      return 'Chilly weather calls for steaming broth and gentle spices. Warm, nourishing soups soothe the body and elevate your core temperature with pure comforting delight.';
+    }
+    if (lowerP.contains('happy') || lowerP.contains('celebrat') || lowerR.contains('senang') || lowerR.contains('gembira')) {
+      return 'Celebratory moments call for vibrant, festive culinary delights that amplify positive energy and make sharing memorable meals a pure joy.';
+    }
+    return 'Your current mood is best complemented by authentic comfort food crafted to satisfy cravings and bring balanced warmth to your day.';
+  }
+
+  String _getLocalizedBadge(String badge, String userPrompt, bool isId) {
+    final shouldBeEnglish = !isId || _isEnglishText(userPrompt);
+    if (!shouldBeEnglish) return badge;
+
+    String text = badge.trim();
+    final lower = text.toLowerCase();
+
+    // High priority phrase matches
+    if (lower.contains('comfort food malam') || lower.contains('kuliner malam')) {
+      return 'Late-Night Comfort Food';
+    }
+    if (lower.contains('kuah hangat rempah')) {
+      return 'Spiced Warm Broth';
+    }
+    if (lower.contains('kuah hangat')) {
+      return 'Soothing Warm Broth';
+    }
+    if (lower.contains('makan malam')) {
+      return 'Cozy Dinner';
+    }
+    if (lower.contains('makan siang')) {
+      return 'Hearty Lunch';
+    }
+    if (lower.contains('sarapan pagi') || lower.contains('sarapan ringan') || lower.contains('sarapan')) {
+      return 'Morning Breakfast';
+    }
+    if (lower.contains('camilan sore') || lower.contains('cemilan sore')) {
+      return 'Afternoon Bites';
+    }
+    if (lower.contains('pedas menggelegar')) {
+      return 'Fiery Spicy Kick';
+    }
+    if (lower.contains('manis creamy')) {
+      return 'Sweet & Creamy';
+    }
+    if (lower.contains('minuman penenang')) {
+      return 'Soothing Drink';
+    }
+    if (lower.contains('rekomendasi sponsor')) {
+      return 'Sponsored Pick';
+    }
+
+    // Word-level replacements
+    text = text.replaceAll(RegExp(r'\bmalam\b', caseSensitive: false), 'Late-Night');
+    text = text.replaceAll(RegExp(r'\bsiang\b', caseSensitive: false), 'Lunch');
+    text = text.replaceAll(RegExp(r'\bpagi\b', caseSensitive: false), 'Morning');
+    text = text.replaceAll(RegExp(r'\bsore\b', caseSensitive: false), 'Afternoon');
+    text = text.replaceAll(RegExp(r'\bkuah\b', caseSensitive: false), 'Broth');
+    text = text.replaceAll(RegExp(r'\bhangat\b', caseSensitive: false), 'Warm');
+    text = text.replaceAll(RegExp(r'\bpedas\b', caseSensitive: false), 'Spicy');
+    text = text.replaceAll(RegExp(r'\bmanis\b', caseSensitive: false), 'Sweet');
+    text = text.replaceAll(RegExp(r'\brempah\b', caseSensitive: false), 'Spices');
+    text = text.replaceAll(RegExp(r'\bgorengan\b', caseSensitive: false), 'Crispy Snacks');
+    text = text.replaceAll(RegExp(r'\bkopi\b', caseSensitive: false), 'Coffee');
+    text = text.replaceAll(RegExp(r'\bsusu\b', caseSensitive: false), 'Milk');
+    text = text.replaceAll(RegExp(r'\bsegar\b', caseSensitive: false), 'Fresh');
+    text = text.replaceAll(RegExp(r'\bkenyang\b', caseSensitive: false), 'Hearty');
+    text = text.replaceAll(RegExp(r'\bcamilan\b', caseSensitive: false), 'Snacks');
+    text = text.replaceAll(RegExp(r'\bcemilan\b', caseSensitive: false), 'Snacks');
+    text = text.replaceAll(RegExp(r'\brekomendasi\b', caseSensitive: false), 'Recommended');
+    text = text.replaceAll(RegExp(r'\bkuliner\b', caseSensitive: false), 'Culinary');
+
+    // Clean up awkward combinations
+    if (text.toLowerCase().contains('comfort food late-night') ||
+        text.toLowerCase().contains('comfort food night')) {
+      return 'Late-Night Comfort Food';
+    }
+
+    return text;
+  }
+
+  String _getLocalizedCategory(String category, String userPrompt, bool isId) {
+    final shouldBeEnglish = !isId || _isEnglishText(userPrompt);
+    if (!shouldBeEnglish) return category;
+
+    final lower = category.toLowerCase();
+    if (lower.contains('kuliner nusantara') || lower.contains('indonesian')) {
+      return 'Indonesian Cuisine';
+    }
+    if (lower.contains('warung makan') || lower.contains('warteg')) {
+      return 'Local Comfort Eatery';
+    }
+    if (lower.contains('kedai kopi') || lower.contains('kafe') || lower.contains('cafe')) {
+      return 'Coffee & Cafe';
+    }
+    if (lower.contains('cepat saji') || lower.contains('fast food')) {
+      return 'Fast Food';
+    }
+    if (lower.contains('restoran')) {
+      return category.replaceAll(RegExp(r'restoran', caseSensitive: false), 'Restaurant');
+    }
+    return category;
+  }
+
   Widget _buildPlaceCard(
     BuildContext context,
     WidgetRef ref,
@@ -457,6 +651,123 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
               ),
             ),
 
+          // Restaurant Photo Cover with Gradient Overlay & Status Badges
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: place.isSponsored ? Radius.zero : const Radius.circular(17),
+                  topRight: place.isSponsored ? Radius.zero : const Radius.circular(17),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 155,
+                  child: Image.network(
+                    place.photoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: AppColors.redBg,
+                      child: const Center(
+                        child: Text('🍲', style: TextStyle(fontSize: 42)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Gradient Shade at Bottom of Photo
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 48,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.55)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+              // Floating Mood / Category Badge
+              Positioned(
+                bottom: 10,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.restaurant_rounded, size: 12, color: AppColors.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        _getLocalizedBadge(place.moodBadge, widget.userPrompt, tr.isId),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Floating Open/Closed Status
+              Positioned(
+                bottom: 10,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: place.isOpen ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        place.isOpen
+                            ? (tr.isId ? 'Buka' : 'Open')
+                            : (tr.isId ? 'Tutup' : 'Closed'),
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -479,7 +790,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            place.category,
+                            _getLocalizedCategory(place.category, widget.userPrompt, tr.isId),
                             style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary,

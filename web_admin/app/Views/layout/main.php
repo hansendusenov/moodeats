@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="light" lang="id">
+<html class="light" lang="<?= esc(service('request')->getLocale()) ?>">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title><?= esc($title ?? 'MoodEats Admin Console') ?> - MoodEats Console</title>
+    <title><?= esc($title ?? lang('Admin.brand_name') . ' - ' . lang('Admin.brand_subtitle')) ?></title>
     <link rel="icon" type="image/png" href="/assets/images/moodeats_mascot.png"/>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -48,8 +48,8 @@
             <div class="flex items-center gap-2.5">
                 <img src="/assets/images/moodeats_mascot.png" class="w-9 h-9 object-contain drop-shadow-sm" alt="MoodEats Mascot" />
                 <div>
-                    <span class="text-lg font-extrabold tracking-tight text-red-600 leading-tight block">MoodEats</span>
-                    <span class="text-[10px] font-mono text-slate-400 block tracking-wider uppercase">Hyperlocal AI Console</span>
+                    <span class="text-lg font-extrabold tracking-tight text-red-600 leading-tight block"><?= esc(lang('Admin.brand_name')) ?></span>
+                    <span class="text-[10px] font-mono text-slate-400 block tracking-wider uppercase"><?= esc(lang('Admin.brand_subtitle')) ?></span>
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between bg-red-50/60 px-2.5 py-1.5 rounded border border-red-100">
@@ -66,33 +66,33 @@
 
         <!-- Navigation Links -->
         <nav class="flex flex-col gap-1">
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'dashboard' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/dashboard">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'dashboard' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('dashboard') ?>">
                 <span class="material-symbols-outlined text-[18px]">insights</span>
-                <span class="text-sm">Overview & Analytics</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_dashboard')) ?></span>
             </a>
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'banners' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/banners">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'banners' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('banners') ?>">
                 <span class="material-symbols-outlined text-[18px]">ad_units</span>
-                <span class="text-sm">Banners & Ads</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_banners')) ?></span>
             </a>
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'merchants' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/merchants">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'merchants' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('merchants') ?>">
                 <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
-                <span class="text-sm">Mitra & Vouchers</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_merchants')) ?></span>
             </a>
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'users' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/users">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'users' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('users') ?>">
                 <span class="material-symbols-outlined text-[18px]">group</span>
-                <span class="text-sm">User &amp; Injeksi Voucher</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_users')) ?></span>
             </a>
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'menus' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/menus">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'menus' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('menus') ?>">
                 <span class="material-symbols-outlined text-[18px]">restaurant_menu</span>
-                <span class="text-sm">Default Menus</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_menus')) ?></span>
             </a>
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'analytics' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/analytics">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'analytics' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('analytics') ?>">
                 <span class="material-symbols-outlined text-[18px]">psychology</span>
-                <span class="text-sm">Logs &amp; AI Sessions</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_analytics')) ?></span>
             </a>
-            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'audit_logs' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="/audit-logs">
+            <a class="px-3 py-2 flex items-center gap-3 transition-colors rounded <?= ($active_menu ?? '') === 'audit_logs' ? 'border-l-4 border-red-600 text-red-600 font-bold bg-red-50/80 shadow-xs' : 'text-slate-600 hover:text-red-600 hover:bg-red-50/40 font-medium' ?>" href="<?= site_url('audit-logs') ?>">
                 <span class="material-symbols-outlined text-[18px]">verified_user</span>
-                <span class="text-sm">Audit &amp; UU PDP Logs</span>
+                <span class="text-sm"><?= esc(lang('Admin.nav_audit_logs')) ?></span>
             </a>
         </nav>
     </div>
@@ -103,7 +103,7 @@
             <div class="flex items-center justify-between text-xs mb-1.5">
                 <span class="text-slate-600 flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-[14px] text-emerald-600">vital_signs</span>
-                    PostgreSQL Pooler
+                    <?= esc(lang('Admin.db_status')) ?>
                 </span>
                 <span class="text-emerald-600 font-bold font-mono">100% OK</span>
             </div>
@@ -111,16 +111,16 @@
                 <div class="bg-emerald-500 h-1 rounded-full w-full"></div>
             </div>
             <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                <span>Region</span>
+                <span><?= esc(lang('Admin.region')) ?></span>
                 <span class="text-red-600 font-bold">ap-southeast-1</span>
             </div>
         </div>
         <div class="flex items-center justify-between px-1 py-1 text-slate-600">
-            <a class="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium transition-colors" href="/logout">
+            <a class="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium transition-colors" href="<?= site_url('logout') ?>">
                 <span class="material-symbols-outlined text-[16px]">logout</span>
-                Logout
+                <?= esc(lang('Admin.nav_logout')) ?>
             </a>
-            <span class="text-[10px] text-slate-400 font-mono">v1.0-prod</span>
+            <span class="text-[10px] text-slate-400 font-mono"><?= esc(lang('Admin.nav_version')) ?></span>
         </div>
     </div>
 </aside>
@@ -132,20 +132,39 @@
         <div class="flex items-center gap-3">
             <div class="flex items-center gap-2 px-2.5 py-1 rounded bg-red-50/70 border border-red-200 text-xs font-semibold text-red-700">
                 <span class="material-symbols-outlined text-red-600 text-[16px]">location_on</span>
-                <span>Jabodetabek & Kota Besar</span>
+                <span><?= esc(lang('Admin.top_geofence')) ?></span>
             </div>
             <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-xs text-slate-600">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span>ADK Agent: <strong class="text-slate-800 font-mono">Online (:8080)</strong></span>
+                <span><?= esc(lang('Admin.top_adk_status')) ?></span>
             </div>
         </div>
 
         <!-- Trailing Profile & Actions -->
-        <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2.5 pl-2 border-l border-slate-200">
+        <div class="flex items-center gap-4">
+            <!-- Language Switcher Pill -->
+            <?php 
+                $currentLocale = service('request')->getLocale(); 
+                $currentReqUri = current_url();
+            ?>
+            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold" title="<?= esc(lang('Admin.lang_switch_tooltip')) ?>">
+                <a href="<?= site_url('lang/en') ?>?return_url=<?= urlencode($currentReqUri) ?>" 
+                   class="px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 <?= $currentLocale === 'en' ? 'bg-white text-red-600 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800' ?>">
+                    <span class="text-xs">🇬🇧</span>
+                    <span class="text-[11px] tracking-tight">EN</span>
+                </a>
+                <a href="<?= site_url('lang/id') ?>?return_url=<?= urlencode($currentReqUri) ?>" 
+                   class="px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 <?= $currentLocale === 'id' ? 'bg-white text-red-600 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800' ?>">
+                    <span class="text-xs">🇮🇩</span>
+                    <span class="text-[11px] tracking-tight">ID</span>
+                </a>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="flex items-center gap-2.5 pl-3 border-l border-slate-200">
                 <div class="w-8 h-8 rounded-full bg-red-100 border border-red-300 flex items-center justify-center text-red-700 font-bold text-sm">
                     <?= esc(strtoupper(substr(session()->get('username') ?? 'A', 0, 1))) ?>
                 </div>
@@ -181,7 +200,7 @@
             <div class="p-3.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm shadow-xs space-y-1">
                 <div class="font-bold flex items-center gap-2 text-red-900">
                     <span class="material-symbols-outlined text-red-600 text-[20px]">warning</span>
-                    Periksa kesalahan berikut:
+                    <?= esc(lang('Admin.check_errors')) ?>
                 </div>
                 <ul class="list-disc list-inside pl-2 text-xs">
                     <?php foreach (session()->getFlashdata('errors') as $err): ?>
@@ -205,18 +224,18 @@
                 <span id="modalIcon" class="material-symbols-outlined text-[26px]">warning</span>
             </div>
             <div class="flex-1">
-                <h3 id="modalTitle" class="text-base font-extrabold text-slate-900 leading-tight">Konfirmasi Tindakan</h3>
-                <p id="modalMessage" class="text-xs text-slate-600 mt-1.5 leading-relaxed">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+                <h3 id="modalTitle" class="text-base font-extrabold text-slate-900 leading-tight"><?= esc(lang('Admin.confirm_title')) ?></h3>
+                <p id="modalMessage" class="text-xs text-slate-600 mt-1.5 leading-relaxed"><?= esc(lang('Admin.confirm_message')) ?></p>
             </div>
         </div>
 
         <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
             <button type="button" id="modalCancelBtn" class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors shadow-2xs">
-                Batal
+                <?= esc(lang('Admin.cancel')) ?>
             </button>
             <button type="button" id="modalConfirmBtn" class="px-4 py-2 rounded-xl font-bold text-xs text-white bg-red-600 hover:bg-red-700 transition-all shadow-sm flex items-center gap-1.5">
                 <span id="modalConfirmIcon" class="material-symbols-outlined text-[16px]">check</span>
-                <span id="modalConfirmText">Lanjutkan</span>
+                <span id="modalConfirmText"><?= esc(lang('Admin.confirm_btn_continue')) ?></span>
             </button>
         </div>
     </div>
@@ -224,10 +243,10 @@
 
 <script>
 window.showConfirmDialog = function({
-    title = 'Konfirmasi Tindakan',
-    message = 'Apakah Anda yakin ingin melanjutkan tindakan ini?',
-    confirmText = 'Lanjutkan',
-    cancelText = 'Batal',
+    title = <?= json_encode(lang('Admin.confirm_title')) ?>,
+    message = <?= json_encode(lang('Admin.confirm_message')) ?>,
+    confirmText = <?= json_encode(lang('Admin.confirm_btn_continue')) ?>,
+    cancelText = <?= json_encode(lang('Admin.cancel')) ?>,
     type = 'danger', // 'danger' | 'warning' | 'primary' | 'success'
     onConfirm = null,
     targetUrl = null,
@@ -328,9 +347,9 @@ document.addEventListener('click', function(e) {
     const trigger = e.target.closest('[data-confirm]');
     if (trigger) {
         e.preventDefault();
-        const msg = trigger.getAttribute('data-confirm') || 'Apakah Anda yakin?';
-        const title = trigger.getAttribute('data-confirm-title') || 'Konfirmasi Tindakan';
-        const btnText = trigger.getAttribute('data-confirm-btn') || 'Ya, Lanjutkan';
+        const msg = trigger.getAttribute('data-confirm') || <?= json_encode(lang('Admin.confirm_message')) ?>;
+        const title = trigger.getAttribute('data-confirm-title') || <?= json_encode(lang('Admin.confirm_title')) ?>;
+        const btnText = trigger.getAttribute('data-confirm-btn') || <?= json_encode(lang('Admin.confirm_btn_continue')) ?>;
         const type = trigger.getAttribute('data-confirm-type') || 'danger';
         const url = trigger.getAttribute('href');
 

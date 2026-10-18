@@ -17,4 +17,20 @@ class GoogleAuthPlatformHelper {
   static void clearWebSession() {
     platform_impl.clearWebSession();
   }
+
+  static String getWebSavedProfilesDb() {
+    return platform_impl.getWebSavedProfilesDb();
+  }
+
+  static void saveWebProfilesDb(String jsonStr) {
+    platform_impl.saveWebProfilesDb(jsonStr);
+  }
+
+  static bool hasProfileUpdated() {
+    return platform_impl.hasProfileUpdated();
+  }
+
+  static void setProfileUpdated(bool val) {
+    platform_impl.setProfileUpdated(val);
+  }
 }

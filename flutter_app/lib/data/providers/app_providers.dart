@@ -9,6 +9,7 @@ import '../models/history_session_model.dart';
 import '../services/api_service.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/app_cache_service.dart';
+import '../services/location_service.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
 
@@ -42,6 +43,16 @@ final defaultMenusProvider = FutureProvider<List<MenuModel>>((ref) async {
   return AppCacheService.getCachedDefaultMenus();
 });
 
+final nearbyComfortRestaurantsProvider = FutureProvider<List<PlaceModel>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final userLoc = ref.watch(userLocationProvider);
+  return api.getNearbyComfortRestaurants(
+    lat: userLoc.latitude,
+    lng: userLoc.longitude,
+    city: userLoc.cityName,
+  );
+});
+
 final rouletteItemsProvider = FutureProvider<List<RouletteItemModel>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
@@ -73,7 +84,7 @@ class HistoryState {
     this.offset = 0,
     this.startDate,
     this.endDate,
-    this.isTodayOnly = true,
+    this.isTodayOnly = false,
   });
 
   HistoryState copyWith({
@@ -124,7 +135,7 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
         userId: _userId,
         startDate: state.isTodayOnly
             ? todayStr
-            : (state.startDate != null ? _formatDate(state.startDate!) : null),
+            : (state.startDate != null ? _formatDate(state.startDate!) : 'ALL'),
         endDate: state.isTodayOnly
             ? todayStr
             : (state.endDate != null ? _formatDate(state.endDate!) : null),

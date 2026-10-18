@@ -6,27 +6,29 @@
 <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
         <div class="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-wider">
-            <span>Admin Console</span>
+            <span><?= esc(lang('Admin.brand_name')) ?></span>
             <span>/</span>
-            <span>Real-Time Geospatial Telemetry</span>
+            <span><?= esc(lang('Admin.dashboard_telemetry')) ?></span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Jabodetabek Active Node</span>
+            <span class="text-red-600 font-bold"><?= esc(lang('Admin.dashboard_node')) ?></span>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-2">
-            Overview &amp; Sentiment Analytics
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-300">LIVE ENGINE ENGAGED</span>
+            <?= esc(lang('Admin.dashboard_title')) ?>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-300">
+                <?= esc(lang('Admin.dashboard_live_badge')) ?>
+            </span>
         </h1>
     </div>
 
     <!-- Quick Action Buttons -->
     <div class="flex items-center gap-2">
-        <a href="/menus/create" class="h-8 px-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
+        <a href="<?= site_url('menus/create') ?>" class="h-8 px-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
             <span class="material-symbols-outlined text-[16px] text-red-600">add_circle</span>
-            Tambah Menu
+            <?= esc(lang('Admin.dashboard_btn_menu')) ?>
         </a>
-        <a href="/banners/create" class="h-8 px-3.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+        <a href="<?= site_url('banners/create') ?>" class="h-8 px-3.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
             <span class="material-symbols-outlined text-[16px]">campaign</span>
-            Pasang Banner Iklan
+            <?= esc(lang('Admin.dashboard_btn_banner')) ?>
         </a>
     </div>
 </div>
@@ -36,18 +38,18 @@
     <!-- Card 1: Active Banners -->
     <div class="bg-white border border-red-100 rounded-xl p-4 border-t-4 border-t-red-600 shadow-xs">
         <div class="flex items-start justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Active Banners</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= esc(lang('Admin.dashboard_kpi_banners')) ?></span>
             <span class="p-1 rounded bg-red-50 text-red-600">
                 <span class="material-symbols-outlined text-[18px]">ad_units</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold text-slate-900 font-mono"><?= $activeBannersCount ?></span>
-            <span class="text-xs text-slate-500 font-medium">kampanye aktif</span>
+            <span class="text-xs text-slate-500 font-medium"><?= esc(lang('Admin.dashboard_kpi_banners_sub')) ?></span>
         </div>
         <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-            <a href="/banners" class="text-red-600 hover:text-red-700 font-semibold flex items-center gap-1">
-                Kelola Iklan <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <a href="<?= site_url('banners') ?>" class="text-red-600 hover:text-red-700 font-semibold flex items-center gap-1">
+                <?= esc(lang('Admin.view')) ?> <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
             </a>
             <span class="text-[10px] text-slate-400 font-mono">Time-Parting</span>
         </div>
@@ -56,38 +58,38 @@
     <!-- Card 2: Curated Menus -->
     <div class="bg-white border border-red-100 rounded-xl p-4 border-t-4 border-t-amber-500 shadow-xs">
         <div class="flex items-start justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Curated Fallback Menus</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= esc(lang('Admin.dashboard_kpi_menus')) ?></span>
             <span class="p-1 rounded bg-amber-50 text-amber-600">
                 <span class="material-symbols-outlined text-[18px]">restaurant_menu</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold text-slate-900 font-mono"><?= $menusCount ?></span>
-            <span class="text-xs text-slate-500 font-medium">menu siap saji</span>
+            <span class="text-xs text-slate-500 font-medium"><?= esc(lang('Admin.dashboard_kpi_menus_sub')) ?></span>
         </div>
         <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-            <a href="/menus" class="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-1">
-                Daftar Menu <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <a href="<?= site_url('menus') ?>" class="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-1">
+                <?= esc(lang('Admin.view')) ?> <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
             </a>
-            <span class="text-[10px] text-slate-400 font-mono">Tampil di Mobile</span>
+            <span class="text-[10px] text-slate-400 font-mono">Curated Local</span>
         </div>
     </div>
 
     <!-- Card 3: Sponsored Merchants -->
     <div class="bg-white border border-red-100 rounded-xl p-4 border-t-4 border-t-emerald-600 shadow-xs">
         <div class="flex items-start justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Sponsored Merchants</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= esc(lang('Admin.dashboard_kpi_merchants')) ?></span>
             <span class="p-1 rounded bg-emerald-50 text-emerald-600">
                 <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold text-slate-900 font-mono"><?= $merchantsCount ?></span>
-            <span class="text-xs text-slate-500 font-medium">mitra resto</span>
+            <span class="text-xs text-slate-500 font-medium"><?= esc(lang('Admin.dashboard_kpi_merchants_sub')) ?></span>
         </div>
         <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-            <a href="/merchants" class="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1">
-                Kelola Mitra <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <a href="<?= site_url('merchants') ?>" class="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1">
+                <?= esc(lang('Admin.view')) ?> <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
             </a>
             <span class="text-[10px] text-slate-400 font-mono">15m Timer Promo</span>
         </div>
@@ -96,18 +98,18 @@
     <!-- Card 4: Total AI Sessions -->
     <div class="bg-white border border-red-100 rounded-xl p-4 border-t-4 border-t-indigo-600 shadow-xs">
         <div class="flex items-start justify-between">
-            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Live AI Sentiment Sessions</span>
+            <span class="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold"><?= esc(lang('Admin.dashboard_kpi_sessions')) ?></span>
             <span class="p-1 rounded bg-indigo-50 text-indigo-600">
                 <span class="material-symbols-outlined text-[18px]">psychology</span>
             </span>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
             <span class="text-3xl font-extrabold text-slate-900 font-mono"><?= $totalSessionsCount ?></span>
-            <span class="text-xs text-slate-500 font-medium">total interaksi</span>
+            <span class="text-xs text-slate-500 font-medium"><?= esc(lang('Admin.dashboard_kpi_sessions_sub')) ?></span>
         </div>
         <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
             <span class="text-emerald-600 font-semibold flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]">trending_up</span> Hari ini: <?= $todaySessionsCount ?>
+                <span class="material-symbols-outlined text-[14px]">trending_up</span> <?= esc(lang('Admin.dashboard_kpi_today')) ?>: <?= $todaySessionsCount ?>
             </span>
             <span class="text-[10px] text-slate-400 font-mono">Gemini 2.5 Flash</span>
         </div>
@@ -120,28 +122,28 @@
     <div class="lg:col-span-2 bg-white rounded-xl border border-red-100 shadow-xs p-5">
         <div class="flex items-center justify-between mb-4">
             <div>
-                <h2 class="text-base font-bold text-slate-900">Riwayat Percakapan & Deteksi Sentimen Terkini</h2>
-                <p class="text-xs text-slate-500">Log emosi pengguna yang diproses oleh AI Agent Engine</p>
+                <h2 class="text-base font-bold text-slate-900"><?= esc(lang('Admin.dashboard_history_title')) ?></h2>
+                <p class="text-xs text-slate-500"><?= esc(lang('Admin.dashboard_history_desc')) ?></p>
             </div>
-            <a href="/analytics" class="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1">
-                Lihat Semua <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <a href="<?= site_url('analytics') ?>" class="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1">
+                <?= esc(lang('Admin.dashboard_view_all')) ?> <span class="material-symbols-outlined text-[14px]">chevron_right</span>
             </a>
         </div>
 
         <?php if (empty($recentSessions)): ?>
             <div class="py-12 text-center text-slate-400 text-xs">
                 <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">forum</span>
-                Belum ada sesi curhat terekam. Sesi akan otomatis muncul ketika pengguna menggunakan fitur rekomendasi AI di aplikasi mobile.
+                <?= esc(lang('Admin.dashboard_history_empty')) ?>
             </div>
         <?php else: ?>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="border-b border-slate-100 text-slate-400 font-mono uppercase text-[10px]">
-                            <th class="py-2.5 px-3">Waktu</th>
-                            <th class="py-2.5 px-3">Curhatan Pengguna</th>
-                            <th class="py-2.5 px-3">Mood Terdeteksi</th>
-                            <th class="py-2.5 px-3">Kota</th>
+                            <th class="py-2.5 px-3"><?= esc(lang('Admin.dashboard_col_time_loc')) ?></th>
+                            <th class="py-2.5 px-3"><?= esc(lang('Admin.dashboard_col_story')) ?></th>
+                            <th class="py-2.5 px-3"><?= esc(lang('Admin.dashboard_col_mood')) ?></th>
+                            <th class="py-2.5 px-3">City / Region</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -215,10 +217,10 @@
                 <span class="text-xs font-bold uppercase tracking-wider font-mono">Autonomous Commerce</span>
             </div>
             <p class="text-xs text-red-100 leading-relaxed mb-4">
-                Sistem secara otomatis mengarahkan mood lapar emosional pengguna ke restoran mitra bersponsor dengan kode promo 15 menit.
+                <?= esc(lang('Admin.merchants_desc')) ?>
             </p>
-            <a href="/merchants" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-red-700 font-bold text-xs hover:bg-red-50 transition-colors shadow-xs">
-                <span>Atur Mitra Sponsor</span>
+            <a href="<?= site_url('merchants') ?>" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-red-700 font-bold text-xs hover:bg-red-50 transition-colors shadow-xs">
+                <span><?= esc(lang('Admin.nav_merchants')) ?></span>
                 <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
             </a>
         </div>

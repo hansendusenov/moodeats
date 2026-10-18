@@ -10,6 +10,7 @@ class AuditLogs extends BaseController
 
     public function __construct()
     {
+        helper(['url', 'form', 'pdp']);
         $this->auditModel = new SecurityAuditLogModel();
     }
 

@@ -6,26 +6,26 @@
 <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
     <div>
         <div class="flex items-center gap-2 text-xs font-mono text-slate-400 uppercase tracking-wider">
-            <span>Admin Console</span>
+            <span><?= esc(lang('Admin.brand_name')) ?></span>
             <span>/</span>
-            <span>Kemitraan Resto</span>
+            <span><?= esc(lang('Admin.nav_merchants')) ?></span>
             <span>/</span>
-            <span class="text-red-600 font-bold">Voucher Promo Dinamis</span>
+            <span class="text-red-600 font-bold"><?= esc(lang('Admin.merchants_badge')) ?></span>
         </div>
         <h1 class="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight flex items-center gap-2">
-            Sponsored Merchants &amp; Dynamic Vouchers
+            <?= esc(lang('Admin.merchants_title')) ?>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-red-50 text-red-700 border border-red-200">
-                15m Countdown Timer
+                <?= esc(lang('Admin.merchants_badge')) ?>
             </span>
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
-            Kelola mitra resto bersponsor dan voucher promo eksklusif yang ditampilkan otomatis saat rekomendasi mood kuliner.
+            <?= esc(lang('Admin.merchants_desc')) ?>
         </p>
     </div>
     <div class="flex items-center gap-2">
-        <a href="/merchants/create" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+        <a href="<?= site_url('merchants/create') ?>" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
             <span class="material-symbols-outlined text-[16px]">add_business</span>
-            Tambah Mitra Resto
+            <?= esc(lang('Admin.merchants_btn_create')) ?>
         </a>
     </div>
 </div>
@@ -37,7 +37,7 @@
         <div class="relative flex-1 min-w-[260px] max-w-md">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
             <input type="text" id="merchantSearchInput" value="<?= esc($search ?? '') ?>" 
-                   placeholder="Cari resto, voucher, kategori, atau alamat..." 
+                   placeholder="<?= esc(lang('Admin.merchants_search_placeholder')) ?>" 
                    class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">
             <button id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined text-[16px]">cancel</span>
@@ -47,50 +47,50 @@
         <!-- Filter Status Buttons -->
         <div class="flex items-center gap-1.5 text-xs">
             <button type="button" onclick="filterStatus('all')" id="filterBtnAll" class="px-2.5 py-1.5 rounded-lg font-semibold text-red-600 bg-red-50 border border-red-200 transition-colors">
-                Semua (<span id="countAll"><?= count($merchants) ?></span>)
+                <?= esc(lang('Admin.filter_all')) ?> (<span id="countAll"><?= count($merchants) ?></span>)
             </button>
             <button type="button" onclick="filterStatus('active')" id="filterBtnActive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Aktif (<span id="countActive"><?= count(array_filter($merchants, fn($m) => !empty($m['is_active']) && $m['is_active'] !== 'f' && $m['is_active'] !== false)) ?></span>)
+                <?= esc(lang('Admin.filter_active')) ?> (<span id="countActive"><?= count(array_filter($merchants, fn($m) => !empty($m['is_active']) && $m['is_active'] !== 'f' && $m['is_active'] !== false)) ?></span>)
             </button>
             <button type="button" onclick="filterStatus('inactive')" id="filterBtnInactive" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors">
-                Nonaktif (<span id="countInactive"><?= count(array_filter($merchants, fn($m) => empty($m['is_active']) || $m['is_active'] === 'f' || $m['is_active'] === false)) ?></span>)
+                <?= esc(lang('Admin.filter_inactive')) ?> (<span id="countInactive"><?= count(array_filter($merchants, fn($m) => empty($m['is_active']) || $m['is_active'] === 'f' || $m['is_active'] === false)) ?></span>)
             </button>
         </div>
     </div>
 
     <!-- Bulk Actions Floating Bar (Toggled when 1+ checkboxes selected) -->
-    <form id="bulkActionForm" action="/merchants/bulk" method="post" class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+    <form id="bulkActionForm" action="<?= site_url('merchants/bulk') ?>" method="post" class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <?= csrf_field() ?>
         <input type="hidden" name="action" id="bulkActionType" value="">
         
         <div class="flex items-center gap-2">
             <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
                 <input type="checkbox" id="checkAllMaster" class="w-4 h-4 rounded text-red-600 border-slate-300 focus:ring-red-500">
-                <span>Pilih Semua di Halaman Ini</span>
+                <span><?= esc(lang('Admin.select_all')) ?></span>
             </label>
             <span id="selectedCountBadge" class="hidden text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                0 dipilih
+                0 <?= esc(lang('Admin.selected_count')) ?>
             </span>
         </div>
 
         <div id="bulkButtonsContainer" class="hidden flex items-center gap-2">
             <button type="button" onclick="submitBulkAction('disable')" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-1 transition-colors">
                 <span class="material-symbols-outlined text-[16px]">block</span>
-                Nonaktifkan Terpilih
+                <?= esc(lang('Admin.merchants_bulk_disable')) ?>
             </button>
             <button type="button" onclick="submitBulkAction('enable')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1 transition-colors">
                 <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                Aktifkan Terpilih
+                <?= esc(lang('Admin.merchants_bulk_enable')) ?>
             </button>
             <button type="button" onclick="submitBulkAction('delete')" class="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-1 transition-colors">
                 <span class="material-symbols-outlined text-[16px]">delete</span>
-                Hapus Terpilih
+                <?= esc(lang('Admin.merchants_bulk_delete')) ?>
             </button>
         </div>
     </form>
 </div>
 
-<!-- Table Card (Fits completely without horizontal overflow) -->
+<!-- Table Card -->
 <div class="bg-white rounded-xl border border-red-100 shadow-xs overflow-hidden">
     <table class="w-full text-left text-xs table-fixed">
         <colgroup>
@@ -104,13 +104,13 @@
         <thead>
             <tr class="border-b border-slate-100 bg-slate-50/80 text-slate-500 font-mono uppercase text-[10px]">
                 <th class="py-3 px-3 text-center">
-                    <input type="checkbox" id="checkAllHead" class="w-4 h-4 rounded text-red-600 border-slate-300 focus:ring-red-500 cursor-pointer" title="Pilih Semua">
+                    <input type="checkbox" id="checkAllHead" class="w-4 h-4 rounded text-red-600 border-slate-300 focus:ring-red-500 cursor-pointer" title="<?= esc(lang('Admin.select_all')) ?>">
                 </th>
-                <th class="py-3 px-3">Mitra &amp; Lokasi</th>
-                <th class="py-3 px-3">Kategori &amp; Timer</th>
-                <th class="py-3 px-3">Kode &amp; Promo Voucher</th>
-                <th class="py-3 px-3 text-center">Status</th>
-                <th class="py-3 px-3 text-right">Aksi</th>
+                <th class="py-3 px-3"><?= esc(lang('Admin.merchants_col_merchant')) ?></th>
+                <th class="py-3 px-3"><?= esc(lang('Admin.merchants_col_timer')) ?></th>
+                <th class="py-3 px-3"><?= esc(lang('Admin.merchants_col_voucher')) ?></th>
+                <th class="py-3 px-3 text-center"><?= esc(lang('Admin.merchants_col_status')) ?></th>
+                <th class="py-3 px-3 text-right"><?= esc(lang('Admin.merchants_col_action')) ?></th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100" id="merchantTableBody">
@@ -118,7 +118,7 @@
                 <tr id="emptyRowInitial">
                     <td colspan="6" class="py-12 text-center text-slate-400">
                         <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">storefront</span>
-                        Belum ada mitra restoran bersponsor. Tambahkan mitra untuk mengaktifkan promo voucher.
+                        <?= esc(lang('Admin.merchants_empty')) ?>
                     </td>
                 </tr>
             <?php else: ?>
@@ -162,12 +162,12 @@
                                 </span>
                                 <div class="text-[10px] font-mono font-bold text-amber-700 flex items-center gap-1">
                                     <span class="material-symbols-outlined text-[13px] text-amber-600">timer</span>
-                                    <?= (int) ($m['countdown_minutes'] ?? 15) ?> menit
+                                    <?= (int) ($m['countdown_minutes'] ?? 15) ?> min
                                 </div>
                             </div>
                         </td>
 
-                        <!-- Kode & Promo Voucher (Compact, no overflow) -->
+                        <!-- Kode & Promo Voucher -->
                         <td class="py-3 px-3 align-middle">
                             <div>
                                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -186,31 +186,31 @@
                             </div>
                         </td>
 
-                        <!-- Status (Quick Toggle Button) -->
+                        <!-- Status Toggle Button -->
                         <td class="py-3 px-3 text-center align-middle whitespace-nowrap">
-                            <a href="/merchants/toggle/<?= $m['id'] ?>" 
+                            <a href="<?= site_url('merchants/toggle/' . $m['id']) ?>" 
                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono transition-all <?= $isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' ?>"
-                               title="Klik untuk mengubah status mitra">
+                               title="<?= esc(lang('Admin.status')) ?>">
                                 <span class="w-1.5 h-1.5 rounded-full <?= $isActive ? 'bg-emerald-500' : 'bg-slate-400' ?>"></span>
-                                <?= $isActive ? 'AKTIF' : 'NONAKTIF' ?>
+                                <?= $isActive ? esc(strtoupper(lang('Admin.active'))) : esc(strtoupper(lang('Admin.inactive'))) ?>
                             </a>
                         </td>
 
-                        <!-- Aksi (Easy shortcuts: Edit & Beautiful Confirm Delete) -->
+                        <!-- Aksi -->
                         <td class="py-3 px-3 text-right align-middle whitespace-nowrap">
                             <div class="inline-flex items-center gap-1">
-                                <a href="/merchants/edit/<?= $m['id'] ?>" 
+                                <a href="<?= site_url('merchants/edit/' . $m['id']) ?>" 
                                    class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors shadow-2xs" 
-                                   title="Edit data mitra & voucher">
+                                   title="<?= esc(lang('Admin.edit')) ?>">
                                     <span class="material-symbols-outlined text-[16px]">edit</span>
                                 </a>
-                                <a href="/merchants/delete/<?= $m['id'] ?>" 
-                                   data-confirm="Apakah Anda yakin ingin menghapus mitra '<?= esc($m['merchant_name']) ?>' secara permanen?"
-                                   data-confirm-title="Hapus Restoran Mitra"
-                                   data-confirm-btn="Hapus Mitra"
+                                <a href="<?= site_url('merchants/delete/' . $m['id']) ?>" 
+                                   data-confirm="<?= esc(lang('Admin.confirm_delete_msg')) ?>"
+                                   data-confirm-title="<?= esc(lang('Admin.confirm_delete_title')) ?>"
+                                   data-confirm-btn="<?= esc(lang('Admin.confirm_delete_btn')) ?>"
                                    data-confirm-type="danger"
                                    class="p-1.5 rounded-lg border border-red-100 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors shadow-2xs cursor-pointer" 
-                                   title="Hapus mitra">
+                                   title="<?= esc(lang('Admin.delete')) ?>">
                                     <span class="material-symbols-outlined text-[16px]">delete</span>
                                 </a>
                             </div>
@@ -220,7 +220,7 @@
                 <tr id="emptySearchRow" class="hidden">
                     <td colspan="6" class="py-12 text-center text-slate-400">
                         <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">search_off</span>
-                        Tidak ada mitra restoran yang cocok dengan pencarian Anda.
+                        <?= esc(lang('Admin.no_data')) ?>
                     </td>
                 </tr>
             <?php endif; ?>
@@ -230,15 +230,15 @@
     <!-- Pagination Footer -->
     <div id="paginationBar" class="p-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2 text-slate-600">
-            <span>Tampilkan</span>
+            <span>Show</span>
             <select id="pageSizeSelect" class="py-1 px-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold focus:ring-1 focus:ring-red-500">
                 <option value="5" selected>5</option>
                 <option value="10">10</option>
                 <option value="25">25</option>
             </select>
-            <span>per halaman</span>
+            <span>/ page</span>
             <span class="text-slate-300">|</span>
-            <span id="pageInfoText" class="font-mono text-slate-500">Menampilkan 0 - 0 dari 0 data</span>
+            <span id="pageInfoText" class="font-mono text-slate-500">Loading...</span>
         </div>
 
         <div class="flex items-center gap-1" id="paginationButtons">
@@ -266,6 +266,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentPage = 1;
     let pageSize = parseInt(pageSizeSelect ? pageSizeSelect.value : 5);
     let filteredRows = [...merchantRows];
+
+    const isIndo = <?= json_encode(service('request')->getLocale() === 'id') ?>;
 
     // Master checkboxes syncing
     function updateMasterCheckboxes() {
@@ -296,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (count > 0) {
-            selectedCountBadge.textContent = count + ' dipilih';
+            selectedCountBadge.textContent = count + (isIndo ? ' dipilih' : ' selected');
             selectedCountBadge.classList.remove('hidden');
             bulkButtonsContainer.classList.remove('hidden');
         } else {
@@ -329,28 +331,25 @@ document.addEventListener('DOMContentLoaded', function () {
         const startIdx = (currentPage - 1) * pageSize;
         const endIdx = Math.min(startIdx + pageSize, total);
 
-        // Hide all rows first
         merchantRows.forEach(r => r.classList.add('hidden'));
-
-        // Show only rows belonging to current page from filteredRows
         filteredRows.slice(startIdx, endIdx).forEach(r => r.classList.remove('hidden'));
 
         if (total === 0) {
-            pageInfoText.textContent = 'Menampilkan 0 data';
+            pageInfoText.textContent = isIndo ? 'Menampilkan 0 data' : 'Showing 0 entries';
             if (emptySearchRow) emptySearchRow.classList.remove('hidden');
         } else {
-            pageInfoText.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} mitra`;
+            pageInfoText.textContent = isIndo 
+                ? `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} mitra`
+                : `Showing ${startIdx + 1} - ${endIdx} of ${total} partners`;
             if (emptySearchRow) emptySearchRow.classList.add('hidden');
         }
 
-        // Render page buttons
         paginationButtons.innerHTML = '';
         if (totalPages <= 1) {
             updateMasterCheckboxes();
             return;
         }
 
-        // Prev Button
         const prevBtn = document.createElement('button');
         prevBtn.type = 'button';
         prevBtn.className = `px-2 py-1 rounded-lg border text-xs font-semibold ${currentPage === 1 ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-600 border-slate-200 hover:bg-slate-100'}`;
@@ -359,7 +358,6 @@ document.addEventListener('DOMContentLoaded', function () {
         prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPagination(); } };
         paginationButtons.appendChild(prevBtn);
 
-        // Page Number Buttons
         for (let p = 1; p <= totalPages; p++) {
             const pageBtn = document.createElement('button');
             pageBtn.type = 'button';
@@ -370,7 +368,6 @@ document.addEventListener('DOMContentLoaded', function () {
             paginationButtons.appendChild(pageBtn);
         }
 
-        // Next Button
         const nextBtn = document.createElement('button');
         nextBtn.type = 'button';
         nextBtn.className = `px-2 py-1 rounded-lg border text-xs font-semibold ${currentPage === totalPages ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-600 border-slate-200 hover:bg-slate-100'}`;
@@ -454,33 +451,39 @@ document.addEventListener('DOMContentLoaded', function () {
         const checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
         if (checkedCheckboxes.length === 0) {
             window.showConfirmDialog({
-                title: 'Perhatian',
-                message: 'Silakan pilih minimal satu mitra restoran terlebih dahulu dengan mencentang kotak pilihan.',
-                confirmText: 'Mengerti',
+                title: isIndo ? 'Perhatian' : 'Attention',
+                message: isIndo ? 'Silakan pilih minimal satu mitra restoran terlebih dahulu.' : 'Please select at least one restaurant partner first.',
+                confirmText: 'OK',
                 type: 'warning'
             });
             return;
         }
 
-        let title = 'Konfirmasi Aksi Massal';
+        let title = isIndo ? 'Konfirmasi Aksi Massal' : 'Bulk Action Confirmation';
         let confirmMsg = '';
-        let btnText = 'Lanjutkan';
+        let btnText = isIndo ? 'Lanjutkan' : 'Continue';
         let modalType = 'danger';
 
         if (actionType === 'disable') {
-            title = 'Nonaktifkan Mitra Terpilih';
-            confirmMsg = `Apakah Anda yakin ingin menonaktifkan ${checkedCheckboxes.length} voucher mitra yang dipilih? Voucher tidak akan ditampilkan di aplikasi mobile.`;
-            btnText = 'Nonaktifkan';
+            title = isIndo ? 'Nonaktifkan Mitra Terpilih' : 'Disable Selected Partners';
+            confirmMsg = isIndo 
+                ? `Apakah Anda yakin ingin menonaktifkan ${checkedCheckboxes.length} mitra yang dipilih?` 
+                : `Are you sure you want to disable ${checkedCheckboxes.length} selected partners?`;
+            btnText = isIndo ? 'Nonaktifkan' : 'Disable';
             modalType = 'warning';
         } else if (actionType === 'enable') {
-            title = 'Aktifkan Mitra Terpilih';
-            confirmMsg = `Apakah Anda yakin ingin mengaktifkan ${checkedCheckboxes.length} mitra yang dipilih?`;
-            btnText = 'Aktifkan';
+            title = isIndo ? 'Aktifkan Mitra Terpilih' : 'Enable Selected Partners';
+            confirmMsg = isIndo 
+                ? `Apakah Anda yakin ingin mengaktifkan ${checkedCheckboxes.length} mitra yang dipilih?` 
+                : `Are you sure you want to enable ${checkedCheckboxes.length} selected partners?`;
+            btnText = isIndo ? 'Aktifkan' : 'Enable';
             modalType = 'success';
         } else if (actionType === 'delete') {
-            title = 'Hapus Mitra Terpilih';
-            confirmMsg = `Peringatan: Tindakan ini permanen. Apakah Anda yakin ingin MENGHAPUS ${checkedCheckboxes.length} mitra restoran terpilih beserta seluruh datanya?`;
-            btnText = 'Hapus Permanen';
+            title = isIndo ? 'Hapus Mitra Terpilih' : 'Delete Selected Partners';
+            confirmMsg = isIndo 
+                ? `Peringatan: Tindakan ini permanen. Apakah Anda yakin ingin MENGHAPUS ${checkedCheckboxes.length} mitra restoran terpilih?` 
+                : `Warning: This action is permanent. Are you sure you want to DELETE ${checkedCheckboxes.length} selected partners?`;
+            btnText = isIndo ? 'Hapus Permanen' : 'Delete Permanently';
             modalType = 'danger';
         }
 

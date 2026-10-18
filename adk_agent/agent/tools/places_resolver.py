@@ -29,6 +29,31 @@ def calculate_distance_km(lat1: float, lng1: float, lat2: float, lng2: float) ->
     return round(R * c, 1)
 
 
+def get_culinary_photo_url(name: str, category: str = "") -> str:
+    lower = f"{name} {category}".lower()
+    if any(k in lower for k in ["bakso", "meatball"]):
+        return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600"
+    if any(k in lower for k in ["soto", "soup", "kuah", "sop", "rawon"]):
+        return "https://images.unsplash.com/photo-1547592180-85f173990554?w=600"
+    if any(k in lower for k in ["sate", "satay", "panggang", "bakar"]):
+        return "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600"
+    if any(k in lower for k in ["kopi", "coffee", "cafe", "kafe", "kopitiam"]):
+        return "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600"
+    if any(k in lower for k in ["ayam", "chicken", "geprek", "bebek"]):
+        return "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600"
+    if any(k in lower for k in ["nasi", "rice", "padang", "warteg"]):
+        return "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600"
+    if any(k in lower for k in ["burger", "western", "pizza", "pasta"]):
+        return "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600"
+    if any(k in lower for k in ["mie", "noodle", "ramen", "kwetiau"]):
+        return "https://images.unsplash.com/photo-1552611052-33e04de081de?w=600"
+    if any(k in lower for k in ["manis", "dessert", "cake", "boba", "es ", "gelato", "ice cream"]):
+        return "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600"
+    if any(k in lower for k in ["seafood", "ikan", "udang", "cumi"]):
+        return "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600"
+    return "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600"
+
+
 class PlacesResolver:
     PLACES_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
     OVERPASS_URL = "https://overpass-api.de/api/interpreter"
@@ -205,7 +230,7 @@ class PlacesResolver:
                             "address": item.get("formattedAddress", f"Sekitar {city or 'Jakarta'}"),
                             "distance_km": round(dist, 1),
                             "rating": item.get("rating", 4.5),
-                            "photo_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+                            "photo_url": get_culinary_photo_url(place_name, item.get("primaryType") or "Kuliner"),
                             "mood_badge": mood_badge,
                             "price_range": "Rp 20.000 - Rp 45.000",
                             "is_sponsored": False,
@@ -270,7 +295,7 @@ class PlacesResolver:
                             "address": street,
                             "distance_km": round(dist, 1),
                             "rating": 4.4,
-                            "photo_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400",
+                            "photo_url": get_culinary_photo_url(name, cuisine),
                             "mood_badge": mood_badge,
                             "price_range": "Rp 15.000 - Rp 35.000",
                             "is_sponsored": False,

@@ -32,7 +32,8 @@ class LocationNotifier extends StateNotifier<UserLocation> {
       : super(const UserLocation(
           latitude: -6.2297,
           longitude: 106.8295,
-          cityName: 'Mendeteksi Lokasi...',
+          cityName: 'Jakarta Selatan',
+          subDistrict: 'Kebayoran Baru',
           isGpsAcquired: false,
         ));
 

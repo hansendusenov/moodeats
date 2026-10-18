@@ -21,6 +21,20 @@ class WebLandingScreen extends ConsumerStatefulWidget {
 class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
   bool _isLoggingInGoogle = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final current = ref.read(authUserProvider);
+      if (current == null) {
+        final authService = ref.read(firebaseAuthServiceProvider);
+        if (authService.currentUser != null) {
+          ref.read(authUserProvider.notifier).setLoggedInUser(authService.currentUser!);
+        }
+      }
+    });
+  }
+
   Future<void> _handleGoogleSignInWeb(AppStrings tr) async {
     setState(() => _isLoggingInGoogle = true);
     try {
@@ -47,7 +61,8 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
             ),
           );
 
-          if (user.isProfileComplete) {
+          final hasProfileEver = GoogleAuthPlatformHelper.hasProfileUpdated();
+          if (user.isProfileComplete || hasProfileEver) {
             ref.read(mainTabProvider.notifier).state = 0;
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
@@ -64,7 +79,7 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(errorMsg.isNotEmpty ? errorMsg : 'Login Google dibatalkan.'),
+                content: Text(errorMsg.isNotEmpty ? errorMsg : (tr.isId ? 'Login Google dibatalkan.' : 'Google sign-in cancelled.')),
                 backgroundColor: AppColors.primary,
               ),
             );
@@ -90,6 +105,7 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
       );
       return;
     }
+
     ref.read(mainTabProvider.notifier).state = tabIndex;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
@@ -177,10 +193,10 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'MoodEats',
                       style: TextStyle(
                         fontSize: 20,
@@ -190,8 +206,8 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
                       ),
                     ),
                     Text(
-                      'Hyperlocal Sentiment Commerce',
-                      style: TextStyle(
+                      tr.isId ? 'Sentimen Kuliner Hiperlokal' : 'Hyperlocal Sentiment Commerce',
+                      style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textMuted,
@@ -236,7 +252,9 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
               onPressed: () => _navigateToApp(tabIndex: 3),
               icon: const Icon(Icons.account_circle, color: AppColors.primary),
               label: Text(
-                authUser.displayName.isNotEmpty ? authUser.displayName : 'Akun',
+                authUser.displayName.isNotEmpty
+                    ? authUser.displayName
+                    : (tr.isId ? 'Akun' : 'Account'),
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
               ),
             ),
@@ -249,33 +267,36 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-              child: const Text('Buka Aplikasi', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                tr.isId ? 'Buka Aplikasi' : 'Open App',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: tr.isId ? 'Keluar' : 'Sign Out',
+              icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary, size: 20),
+              onPressed: () async {
+                await ref.read(authUserProvider.notifier).signOut();
+              },
             ),
           ] else ...[
-            if (isDesktop)
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  );
-                },
-                child: Text(
-                  tr.isId ? 'Masuk' : 'Sign In',
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
-                ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              icon: const Icon(Icons.login_rounded, size: 16),
+              label: Text(
+                tr.isId ? 'Masuk' : 'Sign In',
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () => _navigateToApp(tabIndex: 0),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              child: Text(
-                tr.isId ? 'Mulai Eksplorasi' : 'Explore Now',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               ),
             ),
           ],
@@ -349,7 +370,7 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
                     const SizedBox(width: 6),
                     Text(
                       tr.isId
-                          ? 'AI Builder Cup 2026 • Hyperlocal Sentiment Commerce'
+                          ? 'AI Builder Cup 2026 • Sentimen Kuliner Hiperlokal'
                           : 'AI Builder Cup 2026 • Hyperlocal Sentiment Commerce',
                       style: const TextStyle(
                         fontSize: 12,
@@ -401,10 +422,30 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildMoodChip('🥺 Lagi Sedih Butuh Manis', 'Lagi sedih dan stres kerja, butuh dessert manis yang lembut.'),
-                  _buildMoodChip('🔥 Pengen yang Pedas Gurih', 'Lagi geregetan, pengen makan yang pedas berkuah gurih.'),
-                  _buildMoodChip('☕ Mau Kopi Buat Nugas', 'Butuh kopi susu dingin dan tempat tenang buat nugas.'),
-                  _buildMoodChip('🍲 Badan Lemas Pengen Sup', 'Badan lagi kurang fit, pengen sup hangat berkuah segar.'),
+                  _buildMoodChip(
+                    tr.isId ? '🥺 Lagi Sedih Butuh Manis' : '🥺 Down & Craving Sweets',
+                    tr.isId
+                        ? 'Lagi sedih dan stres kerja, butuh dessert manis yang lembut.'
+                        : 'Feeling down and stressed, craving soft sweet dessert.',
+                  ),
+                  _buildMoodChip(
+                    tr.isId ? '🔥 Pengen yang Pedas Gurih' : '🔥 Craving Spicy & Savory',
+                    tr.isId
+                        ? 'Lagi geregetan, pengen makan yang pedas berkuah gurih.'
+                        : 'Need a spicy and savory kick to boost my mood.',
+                  ),
+                  _buildMoodChip(
+                    tr.isId ? '☕ Mau Kopi Buat Nugas' : '☕ Coffee to Focus',
+                    tr.isId
+                        ? 'Butuh kopi susu dingin dan tempat tenang buat nugas.'
+                        : 'Need iced coffee and a calm spot to get work done.',
+                  ),
+                  _buildMoodChip(
+                    tr.isId ? '🍲 Badan Lemas Pengen Sup' : '🍲 Low Energy, Need Warm Soup',
+                    tr.isId
+                        ? 'Badan lagi kurang fit, pengen sup hangat berkuah segar.'
+                        : 'Feeling under the weather, craving fresh comforting soup.',
+                  ),
                 ],
               ),
               const SizedBox(height: 36),
@@ -464,6 +505,13 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
                   // Bite Roulette Shortcut
                   OutlinedButton.icon(
                     onPressed: () {
+                      final user = ref.read(authUserProvider);
+                      if (user == null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                        return;
+                      }
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const BiteRouletteScreen()),
                       );
@@ -812,15 +860,19 @@ class _WebLandingScreenState extends ConsumerState<WebLandingScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Autonomous Hyperlocal Sentiment Commerce & Culinary Discovery Engine',
+          Text(
+            tr.isId
+                ? 'Platform Cerdas Penemuan Kuliner & Rekomendasi Suasana Hati Hiperlokal'
+                : 'Autonomous Hyperlocal Sentiment Commerce & Culinary Discovery Engine',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: Colors.white54),
+            style: const TextStyle(fontSize: 12, color: Colors.white54),
           ),
           const SizedBox(height: 16),
-          const Text(
-            '© 2026 MoodEats',
-            style: TextStyle(fontSize: 11, color: Colors.white38),
+          Text(
+            tr.isId
+                ? '© 2026 MoodEats • Hak Cipta Dilindungi'
+                : '© 2026 MoodEats • All rights reserved',
+            style: const TextStyle(fontSize: 11, color: Colors.white38),
           ),
         ],
       ),
